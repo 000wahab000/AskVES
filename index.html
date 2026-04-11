@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AskVES</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; height: 100vh; display: flex; flex-direction: column; }
+    .header { background: #1a1a2e; padding: 16px 24px; border-bottom: 1px solid #333; }
+    .header h1 { color: #6c63ff; font-size: 1.4rem; }
+    .header p { color: #888; font-size: 0.8rem; margin-top: 2px; }
+    .chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .msg { max-width: 75%; padding: 12px 16px; border-radius: 16px; line-height: 1.5; font-size: 0.95rem; }
+    .msg.user { background: #6c63ff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .msg.bot { background: #1e1e1e; border: 1px solid #333; align-self: flex-start; border-bottom-left-radius: 4px; }
+    .msg.bot.loading { color: #888; font-style: italic; }
+    .input-area { padding: 16px; background: #1a1a1a; border-top: 1px solid #333; display: flex; gap: 10px; }
+    input { flex: 1; background: #2a2a2a; border: 1px solid #444; border-radius: 24px; padding: 12px 18px; color: #fff; font-size: 0.95rem; outline: none; }
+    input:focus { border-color: #6c63ff; }
+    button { background: #6c63ff; border: none; border-radius: 24px; padding: 12px 20px; color: white; cursor: pointer; font-size: 0.95rem; }
+    button:hover { background: #5a52d5; }
+    .suggestions { display: flex; gap: 8px; padding: 0 16px 12px; flex-wrap: wrap; }
+    .chip { background: #1e1e1e; border: 1px solid #444; border-radius: 20px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer; color: #aaa; }
+    .chip:hover { border-color: #6c63ff; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎓 AskVES</h1>
+    <p>Your AI assistant for VESIT campus</p>
+  </div>
+  <div class="chat" id="chat">
+    <div class="msg bot">Hey! I'm AskVES 👋 Ask me about canteen prices, teacher locations, or anything about VESIT campus.</div>
+  </div>
+  <div class="suggestions">
+    <div class="chip" onclick="send('What is cheap to eat under ₹40?')">Cheap food under ₹40</div>
+    <div class="chip" onclick="send('Where is Mugdha maam right now?')">Where is Mugdha ma\'am?</div>
+    <div class="chip" onclick="send('What is available for lunch?')">Lunch options</div>
+    <div class="chip" onclick="send('Where is Dr. Keya Doshi right now?')">Where is KD ma\'am?</div>
+  </div>
+  <div class="input-area">
+    <input id="input" placeholder="Ask anything about VESIT..." onkeydown="if(event.key==='Enter') send()" />
+    <button onclick="send()">Send</button>
+  </div>
+
+  <script>
+    async function send(text) {
+      const input = document.getElementById('input');
+      const msg = text || input.value.trim();
+      if (!msg) return;
+      input.value = '';
+
+      addMessage(msg, 'user');
+      const loading = addMessage('Thinking...', 'bot loading');
+
+      try {
+        const res = await fetch('/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: msg })
+        });
+        const data = await res.json();
+        loading.className = 'msg bot';
+        loading.textContent = data.answer;
+      } catch {
+        loading.className = 'msg bot';
+        loading.textContent = 'Something went wrong. Try again!';
+      }
+    }
+
+    function addMessage(text, className) {
+      const chat = document.getElementById('chat');
+      const div = document.createElement('div');
+      div.className = 'msg ' + className;
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+      return div;
+    }
+  </script>
+</body>
+</html>
