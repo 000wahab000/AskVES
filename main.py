@@ -333,4 +333,7 @@ if __name__ == "__main__":
     print("Priority: Groq-70B → Groq-8B → Gemini-Flash")
     print("Server running at http://localhost:8000")
     print("="*50)
-    HTTPServer(("", 8000), Handler).serve_forever()
+    port = int(os.environ.get("PORT", 8000))
+    print(f"AskVES running at http://localhost:{port}")
+    HTTPServer(("", port), Handler).serve_forever()
+    

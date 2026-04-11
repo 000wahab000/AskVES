@@ -26,19 +26,26 @@
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>🎓 AskVES</h1>
-    <p>Your AI assistant for VESIT campus</p>
-  </div>
+ <div class="header">
+    <h1>🤖 AskVES</h1>
+    <p>Unofficial AI assistant for VESIT students • Not affiliated with VESIT</p>
+</div>
   <div class="chat" id="chat">
-    <div class="msg bot">Hey! I'm AskVES 👋 Ask me about canteen prices, teacher locations, or anything about VESIT campus.</div>
+   <div class="msg bot">Hey! I'm AskVES 👋 Your AI assistant for VESIT campus. I can help you with:<br><br>
+🍽️ <b>Canteen</b> — prices, menu, what's cheap<br>
+👩‍🏫 <b>Teachers</b> — where they are right now<br>
+🎉 <b>Events</b> — upcoming college events<br>
+🖨️ <b>Xerox</b> — which shop is faster<br>
+🍫 <b>Vending Machine</b> — what's available 24/7<br><br>
+Just ask anything!</div>
   </div>
-  <div class="suggestions">
+ <div class="suggestions">
     <div class="chip" onclick="send('What is cheap to eat under ₹40?')">Cheap food under ₹40</div>
     <div class="chip" onclick="send('Where is Mugdha maam right now?')">Where is Mugdha ma\'am?</div>
+    <div class="chip" onclick="send('Any events this week?')">Events this week 🎉</div>
     <div class="chip" onclick="send('What is available for lunch?')">Lunch options</div>
-    <div class="chip" onclick="send('Where is Dr. Keya Doshi right now?')">Where is KD ma\'am?</div>
-  </div>
+    <div class="chip" onclick="send('What is in the vending machine?')">Vending machine 🍫</div>
+</div>
   <div class="input-area">
     <input id="input" placeholder="Ask anything about VESIT..." onkeydown="if(event.key==='Enter') send()" />
     <button onclick="send()">Send</button>
