@@ -1,0 +1,36 @@
+{
+  "xerox_shops": [
+    {
+      "name": "AC Xerox Shop",
+      "location": "near the Management building, VESIT (AC area)",
+      "ac": true,
+      "xerox_price_per_page": 2,
+      "speed": "Slow during rush hours",
+      "stationary_variety": "Very high - wide range of stationery available",
+      "best_for": "Buying stationery, non-urgent xerox",
+      "items": [
+        "Xerox / Photocopy - ₹2 per page",
+        "Pens", "Pencils", "Rulers", "Erasers", "Sharpeners",
+        "Notebooks", "Graph paper", "Drawing sheets",
+        "Stapler", "Staple pins", "Highlighters", "Markers",
+        "Files", "Folders", "Sticky notes", "Geometry box",
+        "Scientific calculator", "Spiral notebooks", "Index cards"
+      ]
+    },
+    {
+      "name": "Non-AC Xerox Shop",
+      "location": "Main Building, VESIT (Non-AC area)",
+      "ac": false,
+      "xerox_price_per_page": 2,
+      "speed": "Very fast, even during rush hours",
+      "stationary_variety": "Limited but has all essentials",
+      "best_for": "Quick xerox, urgent printing",
+      "items": [
+        "Xerox / Photocopy - ₹2 per page",
+        "Pens", "Pencils", "Erasers", "Rulers",
+        "Notebooks", "Graph paper", "Drawing sheets",
+        "Stapler", "Staple pins"
+      ]
+    }
+  ]
+}

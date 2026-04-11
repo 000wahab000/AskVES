@@ -24,23 +24,30 @@ def get_current_slot():
             return day, slot_num
     return day, None
 
+chat_history = []
+
 def ask(question):
     day, slot = get_current_slot()
-    prompt = f"""
-You are AskVES, a helpful AI assistant for VESIT college students.
+    
+    system_prompt = f"""You are AskVES, a helpful AI assistant for VESIT college students.
 Today is {day}, current slot is {slot} (None means break or outside hours).
-Use this data to answer:
 CANTEEN: {json.dumps(canteen_data)}
 TIMETABLE: {json.dumps(timetable_data)}
 When asked about a teacher, find their code, check today's timetable for current slot across all divisions, return room and division.
-Student asks: {question}
-Be helpful and concise.
-"""
+Be helpful and concise."""
+
+    chat_history.append({"role": "user", "content": question})
+    
+    messages = [{"role": "system", "content": system_prompt}] + chat_history
+    
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}]
+        messages=messages
     )
-    return response.choices[0].message.content
+    
+    answer = response.choices[0].message.content
+    chat_history.append({"role": "assistant", "content": answer})
+    return answer
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
