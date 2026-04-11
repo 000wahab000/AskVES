@@ -203,6 +203,8 @@ with open("data/xerox.json") as f:
     xerox_data = json.load(f)
 with open("data/vending.json") as f:
     vending_data = json.load(f)
+with open("data/events.json") as f:
+    events_data = json.load(f)
 # ==========================================
 # QUERY EXPANSION (Your existing code)
 # ==========================================
@@ -268,6 +270,7 @@ TIMETABLE TEACHERS: {json.dumps(timetable_data.get('teachers', {}))}
 TIMETABLE TODAY: {json.dumps(timetable_data.get('timetable', {}).get(day, {}))}
 XEROX: {json.dumps(xerox_data)}
 VENDING: {json.dumps(vending_data)}
+EVENTS: {json.dumps(events_data)}
 When asked about a teacher find their code, check today's timetable for current slot, return room and division.
 If info not found suggest admin office or notice board.
 Be concise."""

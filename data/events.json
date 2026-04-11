@@ -1,0 +1,77 @@
+{
+  "events": [
+    {
+      "name": "Symposium'26: SENTIENCE",
+      "organizer": "CSI VESIT",
+      "date": "13th April 2026",
+      "time": "12:30 PM onwards",
+      "venue": "Auditorium, VESIT",
+      "description": "An immersive tech symposium where AI meets human intelligence. Featuring a speaker session by Mr. Aniket Joshi (AVP at JPMorgan Chase, TEDx Speaker), Prize Distribution, Magazine Launch, Goodies and Food.",
+      "highlights": [
+        "Speaker: Mr. Aniket Joshi - AVP at JPMorgan Chase & TEDx Speaker",
+        "Prize Distribution Ceremony",
+        "Magazine Launch",
+        "Goodies & Food",
+        "Futuristic AI Experience"
+      ],
+      "registration": "https://forms.gle/ZSHx16UiCtt6LZmk9",
+      "fees": "₹100 for CSI Members, ₹150 for Non-CSI Members",
+      "status": "upcoming",
+      "days_away": 2
+    },
+    {
+      "name": "MakerMania 2026",
+      "organizer": "MBFTL VESIT (MBF Tinkerers Lab)",
+      "date": "Registrations Opening Soon",
+      "time": "Month-long program",
+      "venue": "VESIT Campus",
+      "description": "A month-long invention program where students go from Problem to Prototype to Patent. Build real hardware, file a provisional patent, and gain skills in 3D printing, PCB design, CNC machining and more.",
+      "highlights": [
+        "Ideate, Build and Patent your own invention",
+        "Winners get help filing an Indian Provisional Patent",
+        "Workshops on Problem Hunting, Patent Laws, Pitch Perfect, Design Thinking",
+        "Skills: 3D Printing, Laser Cutting, PCB Design, Microcontrollers"
+      ],
+      "registration": "Registrations opening soon - contact Yash Patil: 91364 14509",
+      "fees": "TBD",
+      "status": "registrations_opening_soon",
+      "days_away": 0
+    },
+    {
+      "name": "UniMerge 1.0",
+      "organizer": "ParthBuilds Community",
+      "date": "11th-12th April 2026",
+      "time": "9:00 AM - 9:00 AM (24 hours)",
+      "venue": "Online + VESIT",
+      "description": "A senior-hosted hackathon open to VESIT students. Build real projects across Web Dev, App Dev, and AI/ML tracks in 24 hours.",
+      "highlights": [
+        "24-hour hackathon",
+        "Tracks: Web Development, App Development, AI/ML",
+        "Networking with senior developers",
+        "Real project building experience"
+      ],
+      "registration": "Closed - event in progress",
+      "fees": "Free",
+      "status": "ongoing",
+      "days_away": 0
+    },
+    {
+      "name": "Agents at Work Workshop",
+      "organizer": "GDG VESIT + CodeCell++ CMPN",
+      "date": "11th April 2026",
+      "time": "11:30 AM - 1:00 PM",
+      "venue": "Online (GDG Event Platform)",
+      "description": "Workshop on building AI agents and automating the real world using n8n and Gemini. Speaker: Hannan Chougle, Tech Lead GDG VESIT and Sr. Tech Manager CodeCell++.",
+      "highlights": [
+        "Agentic AI Fundamentals",
+        "n8n no-code workflows",
+        "Smart Hiring automation with AI",
+        "Google Workspace automation"
+      ],
+      "registration": "Check GDG VESIT community for link",
+      "fees": "Free",
+      "status": "today",
+      "days_away": 0
+    }
+  ]
+}
