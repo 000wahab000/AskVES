@@ -1,6 +1,7 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json, os, re
 from datetime import datetime
+import time
 from dotenv import load_dotenv
 
 # Try importing AI clients
@@ -17,6 +18,20 @@ except ImportError:
     GEMINI_AVAILABLE = False
 
 load_dotenv()
+try:
+    from supabase import create_client, Client
+    supabase_url = os.environ.get("SUPABASE_URL")
+    supabase_key = os.environ.get("SUPABASE_KEY")
+    supabase = create_client(supabase_url, supabase_key) if supabase_url and supabase_key else None
+except ImportError:
+    supabase = None
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+server_start_time = time.time()
+metrics = {
+    "total_queries": 0,
+    "total_response_time": 0,
+    "provider_usage": {}
+}
 
 # ==========================================
 # MULTI-PROVIDER AI MANAGER
@@ -44,19 +59,25 @@ class MultiAIProvider:
     def _init_providers(self):
         """Initialize available AI clients"""
         
-        # Groq Setup
-        groq_key = os.getenv("GROQ_API_KEY")
-        if GROQ_AVAILABLE and groq_key:
-            try:
+        # Groq Setup (Multiple Keys Support)
+        groq_keys_str = os.getenv("GROQ_API_KEYS") or os.getenv("GROQ_API_KEY")
+        if GROQ_AVAILABLE and groq_keys_str:
+            groq_keys = [k.strip() for k in groq_keys_str.split(',') if k.strip()]
+            groq_clients = []
+            for k in groq_keys:
+                try:
+                    groq_clients.append(Groq(api_key=k))
+                except Exception as e:
+                    print(f"✗ Failed to init a Groq client: {e}")
+            
+            if groq_clients:
                 self.providers['groq'] = {
-                    'client': Groq(api_key=groq_key),
-                    'primary': 'llama-3.3-70b-versatile',
-                    'fallback': 'llama-3.1-8b-instant',
+                    'clients': groq_clients,
+                    'current_client_idx': 0,
+                    'model': 'llama-3.1-8b-instant',
                     'name': 'Groq'
                 }
-                print("✓ Groq initialized")
-            except Exception as e:
-                print(f"✗ Groq failed: {e}")
+                print(f"✓ Groq initialized with {len(groq_clients)} key(s)")
         
         # Gemini Setup (Google AI Studio)
         gemini_key = os.getenv("GEMINI_API_KEY")
@@ -143,32 +164,36 @@ class MultiAIProvider:
         raise Exception(f"All AI providers failed: {'; '.join(errors)}")
     
     def _try_groq(self, messages):
-        """Try Groq with automatic model fallback"""
+        """Try Groq with multiple API keys fallback and 3B model"""
         provider = self.providers['groq']
-        client = provider['client']
+        clients = provider['clients']
+        model = provider['model']
         
-        # Try primary model (70B)
-        try:
-            response = client.chat.completions.create(
-                model=provider['primary'],
-                messages=messages,
-                temperature=0.7,
-                max_tokens=1024
-            )
-            return response.choices[0].message.content, "Groq-70B"
+        start_idx = provider['current_client_idx']
+        
+        for i in range(len(clients)):
+            idx = (start_idx + i) % len(clients)
+            client = clients[idx]
             
-        except Exception as e:
-            # If rate limited, try smaller 8B model (higher limits)
-            if self.is_rate_limit(e):
-                print("🔄 Groq 70B rate limited, trying 8B model...")
+            try:
                 response = client.chat.completions.create(
-                    model=provider['fallback'],
+                    model=model,
                     messages=messages,
                     temperature=0.7,
                     max_tokens=1024
                 )
-                return response.choices[0].message.content, "Groq-8B"
-            raise e
+                provider['current_client_idx'] = idx  # Save working key index
+                return response.choices[0].message.content, f"Groq-{model} (Key {idx+1})"
+                
+            except Exception as e:
+                if self.is_rate_limit(e):
+                    print(f"🔄 Groq Key {idx+1} rate limited, trying next key...")
+                    continue
+                else:
+                    print(f"⚠️ Groq Key {idx+1} error: {e}")
+                    continue
+                    
+        raise Exception("All Groq API keys failed or hit rate limits.")
     
     def _try_gemini(self, messages):
         """Try Google Gemini"""
@@ -195,16 +220,29 @@ chat_history = []
 # DATA LOADING (Your existing code)
 # ==========================================
 
-with open("data/canteen.json") as f:
-    canteen_data = json.load(f)
-with open("data/timetable.json") as f:
-    timetable_data = json.load(f)
-with open("data/xerox.json") as f:
-    xerox_data = json.load(f)
-with open("data/vending.json") as f:
-    vending_data = json.load(f)
-with open("data/events.json") as f:
-    events_data = json.load(f)
+canteen_data = {}
+timetable_data = {}
+xerox_data = {}
+vending_data = {}
+events_data = {}
+community_data = {}
+
+if supabase:
+    print("🔄 Fetching campus data from Supabase...")
+    try:
+        response = supabase.table("campus_data").select("*").execute()
+        for row in response.data:
+            if row["id"] == "canteen": canteen_data = row["data"]
+            elif row["id"] == "timetable": timetable_data = row["data"]
+            elif row["id"] == "xerox": xerox_data = row["data"]
+            elif row["id"] == "vending": vending_data = row["data"]
+            elif row["id"] == "events": events_data = row["data"]
+            elif row["id"] == "community": community_data = row["data"]
+        print("✅ Supabase data loaded successfully!")
+    except Exception as e:
+        print(f"❌ Failed to load from Supabase: {e}")
+else:
+    print("⚠️ Supabase not connected. Using empty data.")
 # ==========================================
 # QUERY EXPANSION (Your existing code)
 # ==========================================
@@ -265,12 +303,12 @@ def ask(question):
     
     system_prompt = f"""You are AskVES, a helpful AI assistant for VESIT college students.
 Today is {day}, current slot is {slot} (None means break or outside hours).
-CANTEEN: {json.dumps(canteen_data)}
-TIMETABLE TEACHERS: {json.dumps(timetable_data.get('teachers', {}))}
-TIMETABLE TODAY: {json.dumps(timetable_data.get('timetable', {}).get(day, {}))}
-XEROX: {json.dumps(xerox_data)}
-VENDING: {json.dumps(vending_data)}
-EVENTS: {json.dumps(events_data)}
+CANTEEN: {json.dumps(canteen_data, separators=(',', ':'))}
+TIMETABLE TODAY: {json.dumps(timetable_data.get('timetable', {}).get(day, {}), separators=(',', ':'))}
+XEROX: {json.dumps(xerox_data, separators=(',', ':'))}
+VENDING: {json.dumps(vending_data, separators=(',', ':'))}
+EVENTS: {json.dumps(events_data, separators=(',', ':'))}
+COMMUNITY: {json.dumps(community_data.get('facts', []), separators=(',', ':'))}
 When asked about a teacher find their code, check today's timetable for current slot, return room and division.
 If info not found suggest admin office or notice board.
 Be concise."""
@@ -279,10 +317,15 @@ Be concise."""
     messages = [{"role": "system", "content": system_prompt}] + chat_history[-10:]  # Keep last 10 messages for context
     
     try:
+        start_time = time.time()
         # Smart fallback: Try Groq -> Groq-8B -> Gemini
         answer, provider = ai_manager.generate(messages)
         
-        # Optional: Log which provider was used (visible in server console)
+        # Track metrics
+        metrics["total_queries"] += 1
+        metrics["total_response_time"] += (time.time() - start_time)
+        metrics["provider_usage"][provider] = metrics["provider_usage"].get(provider, 0) + 1
+        
         print(f"✓ Response generated by: {provider}")
         
         # Optional: Add provider hint to response (uncomment if you want users to know)
@@ -306,32 +349,255 @@ class Handler(BaseHTTPRequestHandler):
         pass
     
     def do_GET(self):
-        with open("index.html", "rb") as f:
-            content = f.read()
-        self.send_response(200)
-        self.send_header("Content-Type", "text/html")
-        self.end_headers()
-        self.wfile.write(content)
+        if self.path == '/' or self.path == '/index.html':
+            with open("index.html", "rb") as f:
+                content = f.read()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.end_headers()
+            self.wfile.write(content)
+        
+        elif self.path == '/admin' or self.path == '/admin.html':
+            with open("admin.html", "rb") as f:
+                content = f.read()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.end_headers()
+            self.wfile.write(content)
+            
+        elif self.path.startswith('/api/admin/'):
+            auth_header = self.headers.get("Authorization")
+            if auth_header != f"Bearer {ADMIN_PASSWORD}":
+                self.send_response(401)
+                self.end_headers()
+                self.wfile.write(b"Unauthorized")
+                return
+
+            if self.path == '/api/admin/stats':
+                uptime = time.time() - server_start_time
+                avg_time = metrics["total_response_time"] / metrics["total_queries"] if metrics["total_queries"] > 0 else 0
+                stats = {
+                    "uptime_seconds": uptime,
+                    "total_queries": metrics["total_queries"],
+                    "avg_response_time": avg_time,
+                    "provider_usage": metrics["provider_usage"]
+                }
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(stats).encode())
+                
+            elif self.path.startswith('/api/admin/data?source='):
+                source = self.path.split('=')[-1]
+                allowed_sources = ['canteen', 'timetable', 'xerox', 'vending', 'events', 'community']
+                if source in allowed_sources:
+                    try:
+                        with open(f"data/{source}.json", "rb") as f:
+                            content = f.read()
+                        self.send_response(200)
+                        self.send_header("Content-Type", "application/json")
+                        self.end_headers()
+                        self.wfile.write(content)
+                    except Exception:
+                        self.send_response(404)
+                        self.end_headers()
+                else:
+                    self.send_response(400)
+                    self.end_headers()
+            else:
+                self.send_response(404)
+                self.end_headers()
+        else:
+            self.send_response(404)
+            self.end_headers()
     
     def do_POST(self):
-        try:
-            length = int(self.headers["Content-Length"])
-            body = json.loads(self.rfile.read(length))
-            answer = ask(body["question"])
-        except Exception as e:
-            answer = f"System Error: {str(e)}"
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
-        self.wfile.write(json.dumps({"answer": answer}).encode())
+        global community_data
+        if self.path == '/ask':
+            try:
+                length = int(self.headers["Content-Length"])
+                body = json.loads(self.rfile.read(length))
+                answer = ask(body["question"])
+            except Exception as e:
+                answer = f"System Error: {str(e)}"
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"answer": answer}).encode())
+            
+        elif self.path == '/api/contribute':
+            try:
+                length = int(self.headers["Content-Length"])
+                body = json.loads(self.rfile.read(length))
+                email = body.get('email', '').strip().lower()
+                info = body.get('info', '').strip()
+                
+                if not email.endswith('@ves.ac.in'):
+                    raise Exception("You must use a valid @ves.ac.in email address.")
+                if not info or len(info) < 5:
+                    raise Exception("Please provide a valid fact.")
+                    
+                import uuid
+                new_fact = {
+                    "id": str(uuid.uuid4())[:8],
+                    "email": email,
+                    "info": info,
+                    "flags": 0,
+                    "timestamp": datetime.now().isoformat()
+                }
+                
+                if 'facts' not in community_data:
+                    community_data['facts'] = []
+                community_data['facts'].append(new_fact)
+                
+                if supabase:
+                    supabase.table("campus_data").upsert({"id": "community", "data": community_data}).execute()
+                else:
+                    with open("data/community.json", "w") as f:
+                        json.dump(community_data, f, indent=4)
+                    
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": True}).encode())
+            except Exception as e:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
+                
+        elif self.path == '/api/flag':
+            try:
+                length = int(self.headers["Content-Length"])
+                body = json.loads(self.rfile.read(length))
+                chat_msg = body.get('message', '')
+                
+                if community_data.get('facts'):
+                    mod_prompt = f"""You are an auto-moderator for AskVES.
+A user flagged the following bot message as FAKE or INCORRECT:
+"{chat_msg}"
+
+Here are the crowdsourced facts we have:
+{json.dumps(community_data['facts'])}
+
+Does any specific community fact seem directly responsible for generating that flagged message? 
+If yes, reply with ONLY the 'id' string of that fact (e.g. 5a1b3c99). If none seem relevant, reply with exactly NONE."""
+                    
+                    try:
+                        # try Groq to be fast (using ai_manager)
+                        ans, _ = ai_manager.generate([{"role": "system", "content": mod_prompt}])
+                        ans = ans.strip()
+                        
+                        # Find matching ID
+                        for fact in community_data['facts']:
+                            if fact['id'] in ans:
+                                fact['flags'] = fact.get('flags', 0) + 1
+                                if fact['flags'] >= 2:
+                                    community_data['facts'].remove(fact)
+                                    print(f"🚩 Auto-Deleted fact {fact['id']} due to 2+ flags!")
+                                else:
+                                    print(f"🚩 Fact {fact['id']} flagged. Total flags: {fact['flags']}")
+                                
+                                with open("data/community.json", "w") as f:
+                                    json.dump(community_data, f, indent=4)
+                                break
+                    except Exception as e:
+                        print(f"Moderator AI failed: {e}")
+                        
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": True}).encode())
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+            
+        elif self.path.startswith('/api/admin/data?source='):
+            auth_header = self.headers.get("Authorization")
+            if auth_header != f"Bearer {ADMIN_PASSWORD}":
+                self.send_response(401)
+                self.end_headers()
+                self.wfile.write(b"Unauthorized")
+                return
+
+            source = self.path.split('=')[-1]
+            allowed_sources = ['canteen', 'timetable', 'xerox', 'vending', 'events']
+            if source in allowed_sources:
+                try:
+                    length = int(self.headers["Content-Length"])
+                    body_text = self.rfile.read(length).decode('utf-8')
+                    body_json = json.loads(body_text) # Validate valid JSON
+                    
+                    if supabase:
+                        supabase.table("campus_data").upsert({"id": source, "data": body_json}).execute()
+                    else:
+                        with open(f"data/{source}.json", "w") as f:
+                            json.dump(body_json, f, indent=4)
+                        
+                    # Update global memory variables so bot uses new data instantly
+                    global canteen_data, timetable_data, xerox_data, vending_data, events_data
+                    if source == 'canteen': canteen_data = body_json
+                    elif source == 'timetable': timetable_data = body_json
+                    elif source == 'xerox': xerox_data = body_json
+                    elif source == 'vending': vending_data = body_json
+                    elif source == 'events': events_data = body_json
+                    elif source == 'community': community_data = body_json
+
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"success": True}).encode())
+                except json.JSONDecodeError as e:
+                    self.send_response(400)
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"error": f"Invalid JSON format: {str(e)}"}).encode())
+                except Exception as e:
+                    self.send_response(500)
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"error": str(e)}).encode())
+            else:
+                self.send_response(400)
+                self.end_headers()
+            
+        elif self.path == '/whatsapp':
+            try:
+                length = int(self.headers["Content-Length"])
+                body = self.rfile.read(length).decode('utf-8')
+                
+                from urllib.parse import parse_qs
+                post_data = parse_qs(body)
+                
+                # Twilio sends the WhatsApp message text in the 'Body' parameter
+                user_message = post_data.get('Body', [''])[0].strip()
+                
+                if user_message:
+                    answer = ask(user_message)
+                else:
+                    answer = "I didn't receive a valid message."
+                
+                # Create TwiML XML response for Twilio to send back to WhatsApp
+                from twilio.twiml.messaging_response import MessagingResponse
+                resp = MessagingResponse()
+                resp.message(answer)
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/xml')
+                self.end_headers()
+                self.wfile.write(str(resp).encode('utf-8'))
+                
+            except Exception as e:
+                print(f"WhatsApp Webhook Error: {e}")
+                self.send_response(500)
+                self.end_headers()
+        else:
+            self.send_response(404)
+            self.end_headers()
 
 if __name__ == "__main__":
     print("="*50)
-    print("AskVES Multi-AI Mode")
+    print("AskVES Multi-AI Mode (High Speed)")
     print("="*50)
     print(f"Available providers: {list(ai_manager.providers.keys())}")
-    print("Priority: Groq-70B → Groq-8B → Gemini-Flash")
-    print("Server running at http://localhost:8000")
+    print("Priority: Groq-8B (Multi-Key) → Gemini-Flash")
     print("="*50)
     port = int(os.environ.get("PORT", 8000))
     print(f"AskVES running at http://localhost:{port}")
