@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,8 +20,19 @@
       --green: #22c55e;
       --red: #ef4444;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
 
     /* ---- HEADER ---- */
     .header {
@@ -35,17 +47,64 @@
       z-index: 100;
       backdrop-filter: blur(12px);
     }
-    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-    .logo span { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
-    .logo small { font-size: 0.75rem; color: var(--muted); }
-    .nav-links { display: flex; gap: 16px; align-items: center; }
-    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.875rem; transition: color 0.2s; }
-    .nav-links a:hover { color: var(--text); }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo span {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .logo small {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
 
     /* ---- USER PILL ---- */
-    #userBadge { display: none; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px; }
-    #userAvatar { width: 24px; height: 24px; border-radius: 50%; }
-    #userName { font-size: 0.8rem; font-weight: 500; }
+    #userBadge {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
+    #userAvatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+    }
+
+    #userName {
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
     #loginBtn {
       background: var(--accent);
       color: white;
@@ -60,7 +119,11 @@
       gap: 6px;
       transition: background 0.2s, transform 0.1s;
     }
-    #loginBtn:hover { background: #5a52d5; transform: scale(1.03); }
+
+    #loginBtn:hover {
+      background: #5a52d5;
+      transform: scale(1.03);
+    }
 
     /* ---- HERO ---- */
     .hero {
@@ -68,12 +131,31 @@
       padding: 56px 24px 32px;
       background: radial-gradient(ellipse at 50% 0%, var(--accent-glow) 0%, transparent 70%);
     }
-    .hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
-    .hero h1 span { color: var(--accent); }
-    .hero p { color: var(--muted); font-size: 1rem; max-width: 480px; margin: 0 auto; }
+
+    .hero h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .hero h1 span {
+      color: var(--accent);
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 480px;
+      margin: 0 auto;
+    }
 
     /* ---- COMPOSE BOX ---- */
-    .compose-wrapper { max-width: 720px; margin: 0 auto; padding: 0 20px 24px; }
+    .compose-wrapper {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 20px 24px;
+    }
+
     .compose-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -81,9 +163,26 @@
       padding: 20px;
       transition: border-color 0.2s;
     }
-    .compose-card:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-    .compose-top { display: flex; gap: 12px; align-items: flex-start; }
-    #composeAvatar { width: 36px; height: 36px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+
+    .compose-card:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .compose-top {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    #composeAvatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+
     #postInput {
       flex: 1;
       background: transparent;
@@ -96,9 +195,25 @@
       min-height: 64px;
       line-height: 1.6;
     }
-    #postInput::placeholder { color: var(--muted); }
-    .compose-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
-    .compose-hint { font-size: 0.78rem; color: var(--muted); }
+
+    #postInput::placeholder {
+      color: var(--muted);
+    }
+
+    .compose-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .compose-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
     .post-btn {
       background: var(--accent);
       color: white;
@@ -110,9 +225,25 @@
       cursor: pointer;
       transition: background 0.2s, transform 0.1s;
     }
-    .post-btn:hover { background: #5a52d5; transform: scale(1.03); }
-    .post-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    #composeError { font-size: 0.8rem; color: var(--red); margin-top: 8px; display: none; }
+
+    .post-btn:hover {
+      background: #5a52d5;
+      transform: scale(1.03);
+    }
+
+    .post-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #composeError {
+      font-size: 0.8rem;
+      color: var(--red);
+      margin-top: 8px;
+      display: none;
+    }
+
     #signInPrompt {
       background: var(--card);
       border: 1px dashed var(--border);
@@ -120,10 +251,22 @@
       padding: 28px;
       text-align: center;
     }
-    #signInPrompt p { color: var(--muted); margin-bottom: 14px; font-size: 0.9rem; }
+
+    #signInPrompt p {
+      color: var(--muted);
+      margin-bottom: 14px;
+      font-size: 0.9rem;
+    }
 
     /* ---- FEED ---- */
-    .feed { max-width: 720px; margin: 0 auto; padding: 0 20px 48px; display: flex; flex-direction: column; gap: 14px; }
+    .feed {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 20px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
 
     .post-card {
       background: var(--card);
@@ -133,22 +276,73 @@
       transition: border-color 0.2s, transform 0.15s;
       animation: fadeUp 0.3s ease;
     }
-    .post-card:hover { border-color: #3d3d5c; transform: translateY(-1px); }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
+
+    .post-card:hover {
+      border-color: #3d3d5c;
+      transform: translateY(-1px);
     }
 
-    .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .post-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--border); flex-shrink: 0; object-fit: cover; }
-    .post-meta { flex: 1; }
-    .post-name { font-weight: 600; font-size: 0.9rem; }
-    .post-email { font-size: 0.75rem; color: var(--muted); }
-    .post-time { font-size: 0.75rem; color: var(--muted); margin-left: auto; }
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
 
-    .post-body { font-size: 0.92rem; line-height: 1.65; color: var(--text); margin-bottom: 14px; }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-    .post-actions { display: flex; gap: 8px; align-items: center; }
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .post-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+
+    .post-meta {
+      flex: 1;
+    }
+
+    .post-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .post-email {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .post-time {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    .post-body {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
     .action-btn {
       display: flex;
       align-items: center;
@@ -162,20 +356,73 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .action-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
-    .action-btn.upvoted { border-color: var(--green); color: var(--green); background: rgba(34, 197, 94, 0.1); }
-    .action-btn.flagged { border-color: var(--red); color: var(--red); background: rgba(239, 68, 68, 0.1); }
-    .badge { background: var(--accent); color: white; font-size: 0.7rem; padding: 1px 7px; border-radius: 999px; margin-left: 6px; font-weight: 600; }
+
+    .action-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .action-btn.upvoted {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    .action-btn.flagged {
+      border-color: var(--red);
+      color: var(--red);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .badge {
+      background: var(--accent);
+      color: white;
+      font-size: 0.7rem;
+      padding: 1px 7px;
+      border-radius: 999px;
+      margin-left: 6px;
+      font-weight: 600;
+    }
 
     /* ---- EMPTY STATE ---- */
-    .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
-    .empty .icon { font-size: 3rem; margin-bottom: 12px; }
-    .empty p { font-size: 0.95rem; }
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty .icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+
+    .empty p {
+      font-size: 0.95rem;
+    }
 
     /* ---- LOADER ---- */
-    .skeleton { background: linear-gradient(90deg, var(--card) 25%, var(--border) 50%, var(--card) 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 12px; }
-    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-    .skel-card { height: 120px; margin-bottom: 14px; }
+    .skeleton {
+      background: linear-gradient(90deg, var(--card) 25%, var(--border) 50%, var(--card) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 12px;
+    }
+
+    @keyframes shimmer {
+      from {
+        background-position: 200% 0;
+      }
+
+      to {
+        background-position: -200% 0;
+      }
+    }
+
+    .skel-card {
+      height: 120px;
+      margin-bottom: 14px;
+    }
 
     /* ---- TOAST ---- */
     #toast {
@@ -194,9 +441,13 @@
       z-index: 999;
       white-space: nowrap;
     }
-    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
+
 <body>
 
   <!-- HEADER -->
@@ -212,7 +463,16 @@
         <span id="userName"></span>
       </div>
       <button id="loginBtn" onclick="loginWithGoogle()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+          <path
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+          <path
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+          <path
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+          <path
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+        </svg>
         Sign in with Google
       </button>
     </nav>
@@ -235,7 +495,8 @@
     <div class="compose-card" id="composeCard" style="display:none;">
       <div class="compose-top">
         <img id="composeAvatar" src="" alt="you">
-        <textarea id="postInput" placeholder="Share a tip, update, or useful info for your fellow VESIT students..."></textarea>
+        <textarea id="postInput"
+          placeholder="Share a tip, update, or useful info for your fellow VESIT students..."></textarea>
       </div>
       <div id="composeError"></div>
       <div class="compose-footer">
@@ -274,9 +535,9 @@
     function timeAgo(iso) {
       const diff = (Date.now() - new Date(iso)) / 1000;
       if (diff < 60) return 'just now';
-      if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-      if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-      return `${Math.floor(diff/86400)}d ago`;
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return `${Math.floor(diff / 86400)}d ago`;
     }
 
     function renderPost(p) {
@@ -289,9 +550,9 @@
         <div class="post-card" id="post-${p.id}">
           <div class="post-header">
             ${avatarSrc
-              ? `<img class="post-avatar" src="${avatarSrc}" alt="${p.name}" onerror="this.style.display='none'">`
-              : `<div class="post-avatar" style="display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;background:linear-gradient(135deg,#6c63ff,#a855f7)">${initials}</div>`
-            }
+          ? `<img class="post-avatar" src="${avatarSrc}" alt="${p.name}" onerror="this.style.display='none'">`
+          : `<div class="post-avatar" style="display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;background:linear-gradient(135deg,#6c63ff,#a855f7)">${initials}</div>`
+        }
             <div class="post-meta">
               <div class="post-name">${escHtml(p.name || 'Anonymous')}</div>
               <div class="post-email">${escHtml(p.email)}</div>
@@ -311,7 +572,7 @@
     }
 
     function escHtml(str) {
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     async function loadFeed() {
@@ -326,7 +587,7 @@
         // Sort newest first
         posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         feed.innerHTML = posts.map(renderPost).join('');
-      } catch(e) {
+      } catch (e) {
         document.getElementById('feed').innerHTML = `<div class="empty"><div class="icon">⚠️</div><p>Could not load posts. Try refreshing.</p></div>`;
       }
     }
@@ -347,7 +608,7 @@
           document.getElementById('composeCard').style.display = 'block';
           if (user.picture) document.getElementById('composeAvatar').src = user.picture;
         }
-      } catch(e) {}
+      } catch (e) { }
     }
 
     async function submitPost() {
@@ -388,7 +649,7 @@
         if (emptyDiv) feed.innerHTML = '';
         feed.insertAdjacentHTML('afterbegin', renderPost(data.post));
         showToast('✅ Posted successfully!');
-      } catch(e) {
+      } catch (e) {
         errEl.textContent = e.message;
         errEl.style.display = 'block';
       }
@@ -399,25 +660,25 @@
     async function upvote(id, btn) {
       if (upvoted.has(id)) return;
       try {
-        await fetch('/api/upvote', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id}) });
+        await fetch('/api/upvote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
         upvoted.add(id);
         localStorage.setItem('upvoted', JSON.stringify([...upvoted]));
         btn.classList.add('upvoted');
         const countEl = btn.querySelector('.upvote-count');
         if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
-      } catch(e) { showToast('Failed to upvote'); }
+      } catch (e) { showToast('Failed to upvote'); }
     }
 
     async function flagPost(id, btn) {
       if (flagged.has(id)) return;
       try {
-        await fetch('/api/flag', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({message: id}) });
+        await fetch('/api/flag', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: id }) });
         flagged.add(id);
         localStorage.setItem('flagged', JSON.stringify([...flagged]));
         btn.classList.add('flagged');
         btn.innerHTML = '🚩 Flagged';
         showToast('Thanks for flagging! Admins will review this.');
-      } catch(e) { showToast('Failed to flag'); }
+      } catch (e) { showToast('Failed to flag'); }
     }
 
     // Init
@@ -425,4 +686,5 @@
     loadFeed();
   </script>
 </body>
+
 </html>

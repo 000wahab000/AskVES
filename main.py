@@ -1,8 +1,16 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import json, os, re
+import json, os, re, uuid, hashlib, hmac
 from datetime import datetime
 import time
+from urllib.parse import urlencode, parse_qs, urlparse
 from dotenv import load_dotenv
+
+# Try importing Twilio
+try:
+    from twilio.twiml.messaging_response import MessagingResponse
+    TWILIO_AVAILABLE = True
+except ImportError:
+    TWILIO_AVAILABLE = False
 
 # Try importing AI clients
 try:
@@ -26,6 +34,12 @@ try:
 except ImportError:
     supabase = None
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
+APP_URL = os.getenv("APP_URL", "http://localhost:8000")
+
+# In-memory session store: token -> {email, name, picture}
+SESSIONS = {}
 server_start_time = time.time()
 metrics = {
     "total_queries": 0,
@@ -180,9 +194,10 @@ class MultiAIProvider:
                     model=model,
                     messages=messages,
                     temperature=0.7,
-                    max_tokens=1024
+                    max_tokens=512
                 )
-                provider['current_client_idx'] = idx  # Save working key index
+                # Advance to next key after every successful call (true round-robin)
+                provider['current_client_idx'] = (idx + 1) % len(clients)
                 return response.choices[0].message.content, f"Groq-{model} (Key {idx+1})"
                 
             except Exception as e:
@@ -298,23 +313,43 @@ def get_current_slot():
 # ==========================================
 
 def ask(question):
-    question = expand_query(question)
+    raw_question = question
+    expanded_question = expand_query(question)
     day, slot = get_current_slot()
     
-    system_prompt = f"""You are AskVES, a helpful AI assistant for VESIT college students.
-Today is {day}, current slot is {slot} (None means break or outside hours).
-CANTEEN: {json.dumps(canteen_data, separators=(',', ':'))}
-TIMETABLE TODAY: {json.dumps(timetable_data.get('timetable', {}).get(day, {}), separators=(',', ':'))}
-XEROX: {json.dumps(xerox_data, separators=(',', ':'))}
-VENDING: {json.dumps(vending_data, separators=(',', ':'))}
-EVENTS: {json.dumps(events_data, separators=(',', ':'))}
-COMMUNITY: {json.dumps(community_data.get('facts', []), separators=(',', ':'))}
-When asked about a teacher find their code, check today's timetable for current slot, return room and division.
-If info not found suggest admin office or notice board.
-Be concise."""
-    # Build message history
-    chat_history.append({"role": "user", "content": question})
-    messages = [{"role": "system", "content": system_prompt}] + chat_history[-10:]  # Keep last 10 messages for context
+    # Smart context: only inject data relevant to the question
+    q_lower = expanded_question.lower()
+    context_parts = []
+
+    if any(w in q_lower for w in ['canteen', 'food', 'eat', 'lunch', 'menu', 'cheap', 'price', 'meal', 'snack', 'breakfast']):
+        context_parts.append(f"CANTEEN:{json.dumps(canteen_data, separators=(',',':'))}")
+
+    if any(w in q_lower for w in ['teacher', 'professor', 'sir', 'ma\'am', 'maam', 'faculty', 'timetable', 'class', 'room', 'slot', 'lecture', 'mj', 'mugdha']):
+        context_parts.append(f"TIMETABLE_TODAY:{json.dumps(timetable_data.get('timetable', {}).get(day, {}), separators=(',',':'))}")
+
+    if any(w in q_lower for w in ['xerox', 'print', 'photocopy', 'copy', 'printout']):
+        context_parts.append(f"XEROX:{json.dumps(xerox_data, separators=(',',':'))}")
+
+    if any(w in q_lower for w in ['vend', 'vending', 'machine', 'chips', 'cold drink', 'snack', 'drinks']):
+        context_parts.append(f"VENDING:{json.dumps(vending_data, separators=(',',':'))}")
+
+    if any(w in q_lower for w in ['event', 'workshop', 'seminar', 'fest', 'competition', 'happening', 'week']):
+        context_parts.append(f"EVENTS:{json.dumps(events_data, separators=(',',':'))}")
+
+    # If nothing matched, include a general greeting context
+    if not context_parts:
+        context_parts.append("You can answer general campus questions. If info not found, suggest admin office or notice board.")
+
+    context = "\n".join(context_parts)
+
+    system_prompt = f"""You are AskVES, a helpful AI assistant for VESIT college students. Be concise.
+Today is {day}, current slot: {slot} (None = break or outside hours).
+{context}
+For teacher queries: find their code, check today's timetable for current slot, return room and division.
+If info not found: suggest admin office or notice board."""
+
+    current_message = {"role": "user", "content": expanded_question}
+    messages = [{"role": "system", "content": system_prompt}, current_message]
     
     try:
         start_time = time.time()
@@ -332,7 +367,7 @@ Be concise."""
         # if provider == "Gemini-Flash":
         #     answer += "\n\n_(Powered by Google Gemini - Groq limit reached)_"
         
-        chat_history.append({"role": "assistant", "content": answer})
+        # Return final answer
         return answer
         
     except Exception as e:
@@ -364,8 +399,101 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/html")
             self.end_headers()
             self.wfile.write(content)
-            
-        elif self.path.startswith('/api/admin/'):
+
+        elif self.path == '/community' or self.path == '/community.html':
+            with open("community.html", "rb") as f:
+                content = f.read()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.end_headers()
+            self.wfile.write(content)
+
+        elif self.path == '/api/community':
+            # Return all community facts for the discussion page
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps(community_data.get('facts', [])).encode())
+
+        elif self.path.startswith('/auth/google'):
+            # Step 1: Redirect user to Google OAuth consent screen
+            params = urlencode({
+                'client_id': GOOGLE_CLIENT_ID,
+                'redirect_uri': f'{APP_URL}/auth/callback',
+                'response_type': 'code',
+                'scope': 'openid email profile',
+                'hd': 'ves.ac.in',  # Restrict to VESIT domain
+                'prompt': 'select_account'
+            })
+            self.send_response(302)
+            self.send_header('Location', f'https://accounts.google.com/o/oauth2/v2/auth?{params}')
+            self.end_headers()
+
+        elif self.path.startswith('/auth/callback'):
+            # Step 2: Google redirects back here with a code — exchange for user info
+            import urllib.request
+            query = parse_qs(urlparse(self.path).query)
+            code = query.get('code', [''])[0]
+            try:
+                # Exchange code for tokens
+                token_data = urlencode({
+                    'code': code,
+                    'client_id': GOOGLE_CLIENT_ID,
+                    'client_secret': GOOGLE_CLIENT_SECRET,
+                    'redirect_uri': f'{APP_URL}/auth/callback',
+                    'grant_type': 'authorization_code'
+                }).encode()
+                req = urllib.request.Request('https://oauth2.googleapis.com/token', data=token_data)
+                token_resp = json.loads(urllib.request.urlopen(req).read())
+                access_token = token_resp.get('access_token', '')
+
+                # Fetch user info
+                user_req = urllib.request.Request(
+                    'https://www.googleapis.com/oauth2/v2/userinfo',
+                    headers={'Authorization': f'Bearer {access_token}'}
+                )
+                user_info = json.loads(urllib.request.urlopen(user_req).read())
+                email = user_info.get('email', '')
+
+                # Only allow @ves.ac.in emails
+                if not email.endswith('@ves.ac.in'):
+                    self.send_response(302)
+                    self.send_header('Location', '/?auth=error')
+                    self.end_headers()
+                    return
+
+                # Create session
+                session_token = hashlib.sha256(os.urandom(32)).hexdigest()
+                SESSIONS[session_token] = {
+                    'email': email,
+                    'name': user_info.get('name', email.split('@')[0]),
+                    'picture': user_info.get('picture', '')
+                }
+                self.send_response(302)
+                self.send_header('Location', '/community')
+                self.send_header('Set-Cookie', f'session={session_token}; Path=/; HttpOnly')
+                self.end_headers()
+            except Exception as e:
+                print(f'OAuth error: {e}')
+                self.send_response(302)
+                self.send_header('Location', '/?auth=error')
+                self.end_headers()
+
+        elif self.path == '/api/me':
+            # Return current logged-in user info from session cookie
+            cookie = self.headers.get('Cookie', '')
+            session_token = ''
+            for c in cookie.split(';'):
+                c = c.strip()
+                if c.startswith('session='):
+                    session_token = c[8:]
+            user = SESSIONS.get(session_token)
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(user or {}).encode())
+
             auth_header = self.headers.get("Authorization")
             if auth_header != f"Bearer {ADMIN_PASSWORD}":
                 self.send_response(401)
@@ -558,32 +686,107 @@ If yes, reply with ONLY the 'id' string of that fact (e.g. 5a1b3c99). If none se
                 self.send_response(400)
                 self.end_headers()
             
+        elif self.path == '/api/discuss':
+            # Community discussion post — requires Google login
+            try:
+                cookie = self.headers.get('Cookie', '')
+                session_token = ''
+                for c in cookie.split(';'):
+                    c = c.strip()
+                    if c.startswith('session='):
+                        session_token = c[8:]
+                user = SESSIONS.get(session_token)
+
+                length = int(self.headers["Content-Length"])
+                body = json.loads(self.rfile.read(length))
+                info = body.get('info', '').strip()
+
+                if not user:
+                    self.send_response(401)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'error': 'Please sign in with your @ves.ac.in Google account first.'}).encode())
+                    return
+
+                if not info or len(info) < 5:
+                    raise Exception('Please write something meaningful!')
+
+                new_post = {
+                    'id': str(uuid.uuid4())[:8],
+                    'email': user['email'],
+                    'name': user['name'],
+                    'picture': user.get('picture', ''),
+                    'info': info,
+                    'flags': 0,
+                    'upvotes': 0,
+                    'timestamp': datetime.now().isoformat()
+                }
+
+                if 'facts' not in community_data:
+                    community_data['facts'] = []
+                community_data['facts'].append(new_post)
+
+                if supabase:
+                    supabase.table("campus_data").upsert({"id": "community", "data": community_data}).execute()
+                else:
+                    with open("data/community.json", "w") as f:
+                        json.dump(community_data, f, indent=4)
+
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': True, 'post': new_post}).encode())
+            except Exception as e:
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+
+        elif self.path == '/api/upvote':
+            try:
+                length = int(self.headers["Content-Length"])
+                body = json.loads(self.rfile.read(length))
+                post_id = body.get('id', '')
+                for fact in community_data.get('facts', []):
+                    if fact['id'] == post_id:
+                        fact['upvotes'] = fact.get('upvotes', 0) + 1
+                        break
+                if supabase:
+                    supabase.table("campus_data").upsert({"id": "community", "data": community_data}).execute()
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': True}).encode())
+            except Exception as e:
+                self.send_response(400)
+                self.end_headers()
+
         elif self.path == '/whatsapp':
             try:
                 length = int(self.headers["Content-Length"])
                 body = self.rfile.read(length).decode('utf-8')
-                
-                from urllib.parse import parse_qs
                 post_data = parse_qs(body)
-                
-                # Twilio sends the WhatsApp message text in the 'Body' parameter
                 user_message = post_data.get('Body', [''])[0].strip()
-                
+
                 if user_message:
                     answer = ask(user_message)
                 else:
-                    answer = "I didn't receive a valid message."
-                
-                # Create TwiML XML response for Twilio to send back to WhatsApp
-                from twilio.twiml.messaging_response import MessagingResponse
-                resp = MessagingResponse()
-                resp.message(answer)
-                
-                self.send_response(200)
-                self.send_header('Content-Type', 'text/xml')
-                self.end_headers()
-                self.wfile.write(str(resp).encode('utf-8'))
-                
+                    answer = "Hi! I'm AskVES. Ask me anything about VESIT campus!"
+
+                if TWILIO_AVAILABLE:
+                    resp = MessagingResponse()
+                    resp.message(answer)
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/xml')
+                    self.end_headers()
+                    self.wfile.write(str(resp).encode('utf-8'))
+                else:
+                    # Fallback plain text if twilio not installed
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'answer': answer}).encode())
+
             except Exception as e:
                 print(f"WhatsApp Webhook Error: {e}")
                 self.send_response(500)
