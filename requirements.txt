@@ -2,4 +2,4 @@ groq
 google-generativeai
 python-dotenv
 twilio
-supabase
+supabase
