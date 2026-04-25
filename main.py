@@ -1,5 +1,5 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import json, os, re, uuid, hashlib, hmac
+import json, os, re, uuid, hashlib, hmac, traceback
 from datetime import datetime
 import time
 from urllib.parse import urlencode, parse_qs, urlparse
@@ -373,7 +373,9 @@ If info not found: suggest admin office or notice board."""
     except Exception as e:
         error_msg = str(e)
         print(f"✗ All AI providers failed: {error_msg}")
-        return "I'm experiencing high traffic right now. Please try again in a minute, or check the VESIT notice boards for immediate info."
+        print(f"✗ Traceback: {traceback.format_exc()}")
+        print(f"✗ Available providers at time of error: {list(ai_manager.providers.keys())}")
+        return "Sorry, I'm having trouble right now. Try again in a minute! 🙏"
 
 # ==========================================
 # HTTP SERVER (Unchanged)
@@ -391,6 +393,32 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/html")
             self.end_headers()
             self.wfile.write(content)
+
+        elif self.path == '/health':
+            # Diagnostic endpoint — check this on Railway to debug provider issues
+            health = {
+                "status": "ok",
+                "providers_available": list(ai_manager.providers.keys()),
+                "groq_key_set": bool(os.getenv("GROQ_API_KEY") or os.getenv("GROQ_API_KEYS")),
+                "gemini_key_set": bool(os.getenv("GEMINI_API_KEY")),
+                "supabase_connected": supabase is not None,
+                "admin_password_set": bool(os.getenv("ADMIN_PASSWORD")),
+                "data_loaded": {
+                    "canteen": bool(canteen_data),
+                    "timetable": bool(timetable_data),
+                    "events": bool(events_data),
+                    "xerox": bool(xerox_data),
+                    "vending": bool(vending_data),
+                    "community": bool(community_data),
+                },
+                "uptime_seconds": round(time.time() - server_start_time),
+                "total_queries": metrics["total_queries"]
+            }
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps(health, indent=2).encode())
         
         elif self.path == '/admin' or self.path == '/admin.html':
             with open("admin.html", "rb") as f:
