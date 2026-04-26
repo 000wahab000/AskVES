@@ -74,7 +74,7 @@ python main.py
 - [ ] **Dual Authentication System:** Differentiate between verified `@ves.ac.in` students (full access) and standard Gmail users (guest/read-only access).
 - [ ] **Notice Board UI:** Evolve the design into 2 main parts, incorporating a Live Notice Board alongside the chat interface.
 - [ ] **Notes Marketplace:** A dedicated section for seniors to share or sell study notes.
-- [ ] **✨ Visual Excellence Redesign:** Overhaul the interface with modern glassmorphism, dynamic micro-animations, and a curated premium dark-mode color palette.
+- [ ] **Visual Excellence Redesign:** Overhaul the interface with modern glassmorphism, dynamic micro-animations, and a curated premium dark-mode color palette.
 
 ## Built At
 UniMerge 1.0 Hackathon — April 2026
