@@ -12,32 +12,68 @@ AskVES is a RAG-based campus chatbot that answers real-time questions about VESI
 - 🎉 **Events** — upcoming college events and workshops  
 - 🖨️ **Xerox** — compare AC vs Non-AC shop speed and variety  
 - 🍫 **Vending Machine** — what's available near hostel 24/7  
+- 🗣️ **Community** — Reddit-style discussion board with `@ves.ac.in` auth, upvoting, and auto-moderation.
 
-## How It Works
-RAG (Retrieval Augmented Generation) — campus data stored as structured JSON, injected into LLM prompt as context. No model training required.
-
-## Tech Stack
+## Architecture & Tech Stack
 - **LLM**: Groq (Llama 3.3 70B) → Groq (8B fallback) → Gemini 2.0 Flash
-- **Backend**: Python HTTP Server
-- **Frontend**: Single HTML file
+- **Backend**: Modular Python HTTP Server (`http.server`)
+- **Database**: Supabase (PostgreSQL) + Local JSON fallback
+- **Frontend**: Vanilla HTML/JS/CSS (Chat interface, Admin Dashboard, Community Board)
 - **Deployment**: Railway.app
-- **Data**: Structured JSON knowledge base
+
+### Project Structure
+```text
+app/
+  main.py            # Main server setup
+  routes/
+    webhook.py       # WhatsApp Twilio webhook logic
+  services/
+    ai.py            # MultiAIProvider (Groq/Gemini) fallback logic
+    db.py            # Supabase / JSON data loaders
+    voice.py         # Voice processing (Upcoming)
+  core/
+    intents.py       # Query expansion and RAG context building
+    router.py        # HTTP route handlers & endpoints
+    state.py         # Global state & analytics
+  utils/
+    logger.py        # Logging helpers
+    helpers.py       # General utilities (e.g., slot detection)
+```
 
 ## Run Locally
 ```bash
 git clone https://github.com/000wahab000/AskVES
 cd AskVES
 pip install -r requirements.txt
-# Add .env with GROQ_API_KEY and GEMINI_API_KEY
-py main.py
+# Add .env with GROQ_API_KEY, GEMINI_API_KEY, and SUPABASE_URL/KEY
+python main.py
 # Open http://localhost:8000
 ```
 
-## Roadmap
-- [ ] Admin dashboard for managing campus data
-- [ ] Gmail integration to auto-pull college events
-- [ ] WhatsApp bot interface
-- [ ] Notes marketplace for seniors
+## Roadmap & Upcoming Features
+
+### ✅ Completed Milestones
+- [x] **Admin Dashboard:** Live editing of campus data and system metrics.
+- [x] **WhatsApp Integration:** Twilio webhook routing for mobile access.
+- [x] **Reddit-Style Ecosystem:** Community board with upvotes, automated moderation, and fact-reporting.
+- [x] **Modular Architecture:** Clean `app/` folder structure for scalable development.
+
+### 📊 Massive Data Expansion
+- [ ] **Demographics:** Total student counts across B.Tech, M.Tech, Management, Law, and other departments.
+- [ ] **Academics:** Detailed breakdown of all B.Tech fields and specializations.
+- [ ] **Placements:** Comprehensive placement statistics, salary packages, and top recruiting companies.
+- [ ] **Facilities:** Detailed information on all campus facilities.
+- [ ] **Administration & Faculty:** Teacher salaries, internal management structure, legal/business info, and "How to get a job here" guides.
+
+### 🤖 Advanced Bot Capabilities
+- [ ] **Voice Integration:** Add voice inputs and outputs to make the bot more accessible.
+- [ ] **Multilingual Support:** Support queries and responses in multiple regional languages.
+- [ ] **Improved Precision:** Fix vague responses by tightening RAG context and system prompts.
+
+### 🌐 Community & UI Improvements
+- [ ] **Dual Authentication System:** Differentiate between verified `@ves.ac.in` students (full access) and standard Gmail users (guest/read-only access).
+- [ ] **Notice Board UI:** Evolve the design into 2 main parts, incorporating a Live Notice Board alongside the chat interface.
+- [ ] **Notes Marketplace:** A dedicated section for seniors to share or sell study notes.
 
 ## Built At
 UniMerge 1.0 Hackathon — April 2026
