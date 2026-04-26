@@ -78,6 +78,7 @@ Just ask anything!</div>
 </div>
   <div class="input-area">
     <input id="input" placeholder="Ask anything about VESIT..." onkeydown="if(event.key==='Enter') send()" />
+    <button id="voiceBtn" onclick="toggleVoice()" style="background: #333; padding: 12px; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;" title="Click to Talk">🎤</button>
     <button onclick="send()">Send</button>
   </div>
 
@@ -175,6 +176,62 @@ Just ask anything!</div>
         } catch {
             errorP.innerText = 'Network error.';
             errorP.style.display = 'block';
+        }
+    }
+
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    async function toggleVoice() {
+        const btn = document.getElementById('voiceBtn');
+        if (isRecording) {
+            mediaRecorder.stop();
+            btn.style.background = '#333';
+            isRecording = false;
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) audioChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                stream.getTracks().forEach(track => track.stop());
+                
+                const loading = addMessage('Processing audio...', 'bot loading');
+                
+                try {
+                    const res = await fetch('/api/voice', {
+                        method: 'POST',
+                        body: audioBlob,
+                        headers: { 'Content-Type': 'audio/webm' }
+                    });
+                    const data = await res.json();
+                    
+                    if(data.transcription && data.transcription !== "AUDIO_ERROR" && data.transcription !== "AUDIO_TOO_SHORT") {
+                        addMessage(`<i>🎙️ "${data.transcription}"</i>`, 'user');
+                    }
+                    
+                    loading.className = 'msg bot';
+                    loading.textContent = data.answer || data.error;
+                } catch(e) {
+                    loading.className = 'msg bot';
+                    loading.textContent = 'Voice upload failed.';
+                }
+            };
+
+            mediaRecorder.start();
+            btn.style.background = '#ff4444';
+            isRecording = true;
+        } catch (e) {
+            alert('Microphone access denied or not available.');
         }
     }
   </script>

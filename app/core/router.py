@@ -191,7 +191,40 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
     
     def do_POST(self):
-        if self.path == '/ask':
+        if self.path == '/api/voice':
+            try:
+                length = int(self.headers["Content-Length"])
+                audio_data = self.rfile.read(length)
+                
+                from app.services.voice import transcribe_file
+                import tempfile
+                import os
+                
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+                    temp_file_path = temp_file.name
+                    temp_file.write(audio_data)
+                    
+                user_message = transcribe_file(temp_file_path)
+                if os.path.exists(temp_file_path):
+                    os.remove(temp_file_path)
+                    
+                if len(user_message.split()) < 2:
+                    answer = "Audio too short, try again."
+                    user_message = "AUDIO_TOO_SHORT"
+                else:
+                    answer = ask(user_message)
+                    
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"answer": answer, "transcription": user_message}).encode())
+            except Exception as e:
+                print(f"Web Voice Error: {e}")
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
+                
+        elif self.path == '/ask':
             try:
                 length = int(self.headers["Content-Length"])
                 body = json.loads(self.rfile.read(length))

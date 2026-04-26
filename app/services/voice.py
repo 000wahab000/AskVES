@@ -20,13 +20,22 @@ def get_groq_client():
         return Groq(api_key=first_key)
     return None
 
-def transcribe_audio(media_url: str) -> str:
-    if not media_url:
-        return ""
-        
+def transcribe_file(file_path: str) -> str:
     client = get_groq_client()
     if not client:
         raise Exception("Groq client not configured")
+    with open(file_path, "rb") as file:
+        transcription = client.audio.transcriptions.create(
+            file=(os.path.basename(file_path), file.read()),
+            model="whisper-large-v3-turbo",
+            response_format="json",
+            language="en"
+        )
+    return transcription.text.strip()
+
+def transcribe_audio(media_url: str) -> str:
+    if not media_url:
+        return ""
         
     temp_file_path = ""
     try:
@@ -49,15 +58,7 @@ def transcribe_audio(media_url: str) -> str:
             out_file.write(response.read())
             
         # Transcribe using Groq Whisper
-        with open(temp_file_path, "rb") as file:
-            transcription = client.audio.transcriptions.create(
-                file=(os.path.basename(temp_file_path), file.read()),
-                model="whisper-large-v3-turbo",
-                response_format="json",
-                language="en"
-            )
-            
-        return transcription.text.strip()
+        return transcribe_file(temp_file_path)
         
     except Exception as e:
         print(f"Transcription error: {e}")
