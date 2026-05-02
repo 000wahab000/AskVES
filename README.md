@@ -58,6 +58,13 @@ python main.py
 - [x] **Reddit-Style Ecosystem:** Community board with upvotes, automated moderation, and fact-reporting.
 - [x] **Modular Architecture:** Clean `app/` folder structure for scalable development.
 
+### Main critical flaws
+- [ ] **fix the inconsistent text call back** ( i want it to be consistent)
+- [ ] **fix the community board** (make it better and more user friendly and add more features)
+- [ ] **fix the broken Admin panel** 
+- [ ] **fix the broken notice board**
+- [ ] **fix the broken Oauth with google**
+
 ### 📊 Massive Data Expansion
 - [ ] **Demographics:** Total student counts across B.Tech, M.Tech, Management, Law, and other departments.
 - [ ] **Academics:** Detailed breakdown of all B.Tech fields and specializations.
