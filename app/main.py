@@ -7,10 +7,16 @@ from http.server import HTTPServer   # this is the built in python web server, n
 from app.core.router import Handler  # the router handles all the incoming requests from browser or whatsapp
 import app.services.db as db         # the database stuff
 from app.services.ai import ai_manager  # the AI stuff
+from app.core.intents import warm_up    # pre-builds the synonym map after data is loaded
 
 def start_server():
-    # first load all the campus data from supabase into memory
+    # step 1: load all campus data from supabase into memory
     db.init_db()
+
+    # step 2: build the synonym map NOW while the timetable data is freshly loaded
+    # if we skip this it builds lazily on the first question, which might arrive before
+    # the DB fetch is done on platforms like Railway that send a health-check immediately
+    warm_up()
 
     # print some info so you know the server started correctly
     print("="*50)

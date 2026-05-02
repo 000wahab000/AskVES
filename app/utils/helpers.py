@@ -1,14 +1,19 @@
 # helpers.py - small useful functions used by other files
 
-from datetime import datetime   # gives us the current time and date
+from datetime import datetime, timezone, timedelta
+
+# India Standard Time is UTC+5:30
+# Using an explicit timezone means this works correctly even when the server runs in UTC
+# (Railway and Render both run in UTC by default)
+IST = timezone(timedelta(hours=5, minutes=30))
 
 def get_current_slot():
     # this function answers the question "what class period is happening right now?"
     # it returns two things: the day name and the slot number (1 to 6)
     # if its a break, weekend, or outside class hours the slot will be None
 
-    now = datetime.now()
-    day = now.strftime("%A").upper()   # gets todays day in caps eg "MONDAY"
+    now = datetime.now(IST)                    # always use IST, not the server's local time
+    day = now.strftime("%A").upper()           # gets todays day in caps eg "MONDAY"
 
     # no classes on weekends so just return the day and None for slot
     if day in ("SATURDAY", "SUNDAY"):

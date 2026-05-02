@@ -2,7 +2,7 @@
 # this file connects to supabase (the cloud database) and loads all campus data into memory
 # every other file reads the data from here, they dont connect to supabase themselves
 
-import os, json
+import os, json, threading
 from dotenv import load_dotenv   # reads the .env file so we can access the keys we stored there
 
 load_dotenv()
@@ -27,6 +27,16 @@ xerox_data     = {}   # xerox shop info
 vending_data   = {}   # vending machine locations and items
 events_data    = {}   # upcoming events and workshops
 community_data = {}   # student submitted facts and discussion posts
+
+# version counters: bumped by update_data() each time a source changes
+# intents.py uses these (paired with id()) to reliably detect cache invalidation
+# avoids the Python id() GC reuse bug where a freed object's address gets reused
+_data_versions = {k: 0 for k in ['canteen', 'timetable', 'xerox', 'vending', 'events', 'community']}
+
+# protects all writes to the shared data dicts
+# currently the server is single-threaded so this is a no-op overhead,
+# but it makes the code safe if we ever switch to ThreadingHTTPServer
+_lock = threading.Lock()
 
 def init_db():
     # this runs once when the server starts (called from main.py)
@@ -62,9 +72,12 @@ def update_data(source, new_data):
     # it updates the in-memory variable immediately so the AI sees the new data
     # without needing a server restart
     global canteen_data, timetable_data, xerox_data, vending_data, events_data, community_data
-    if source == 'canteen':    canteen_data   = new_data
-    elif source == 'timetable': timetable_data = new_data
-    elif source == 'xerox':     xerox_data     = new_data
-    elif source == 'vending':   vending_data   = new_data
-    elif source == 'events':    events_data    = new_data
-    elif source == 'community': community_data = new_data
+    with _lock:   # hold the lock for the duration of the write
+        if source == 'canteen':    canteen_data   = new_data
+        elif source == 'timetable': timetable_data = new_data
+        elif source == 'xerox':     xerox_data     = new_data
+        elif source == 'vending':   vending_data   = new_data
+        elif source == 'events':    events_data    = new_data
+        elif source == 'community': community_data = new_data
+        # bump the version so intents.py JSON cache knows to re-serialize this source
+        _data_versions[source] = _data_versions.get(source, 0) + 1

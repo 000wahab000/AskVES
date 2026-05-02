@@ -73,18 +73,19 @@ class MultiAIProvider:
     def format_for_gemini(self, messages):
         history = []
         system_context = ""
-        current_user_msg = ""
+        user_msgs = []         # collect all user messages in order (not just the last one)
         for msg in messages:
             role = msg.get('role')
             content = msg.get('content', '')
             if role == 'system':
-                system_context = content   
+                system_context = content
             elif role == 'user':
-                current_user_msg = content  
+                user_msgs.append(content)   # accumulate, don't overwrite
             elif role == 'assistant' and content:
-                history.append({'role': 'model', 'parts': content})  
+                history.append({'role': 'model', 'parts': content})
 # memory part of the AI
 
+        current_user_msg = "\n".join(user_msgs)  # join all user turns in order
         if system_context:
             current_user_msg = f"{system_context}\n\nQuestion: {current_user_msg}"
         return current_user_msg, history

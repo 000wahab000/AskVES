@@ -7,10 +7,11 @@
 # it uses pythons built in web server (BaseHTTPRequestHandler) - no flask or django needed
 
 from http.server import BaseHTTPRequestHandler
-import json, os, uuid, hashlib, urllib.request, time
+import json, os, uuid, hashlib, secrets, urllib.request, time
 # json      = for reading and writing json data
 # uuid      = for generating random unique IDs for community posts
 # hashlib   = for creating secure session tokens
+# secrets   = for timing-safe password comparison (prevents timing attacks)
 # urllib    = for making http requests to googles servers during oauth
 # time      = for calculating server uptime
 
@@ -22,7 +23,7 @@ from urllib.parse import urlencode, parse_qs, urlparse
 from datetime import datetime    # for adding timestamps to community posts
 
 import app.services.db as db                           # campus data
-from app.core.state import SESSIONS, metrics, server_start_time  # shared server memory
+from app.core.state import SESSIONS, get_session, metrics, server_start_time  # shared server memory
 from app.core.intents import ask                       # main AI function
 from app.routes.webhook import handle_whatsapp_webhook  # whatsapp handler
 from app.services.ai import ai_manager                 # needed for the flagging AI moderator
@@ -33,8 +34,17 @@ GOOGLE_CLIENT_ID     = os.getenv("GOOGLE_CLIENT_ID", "")        # google oauth a
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 APP_URL              = os.getenv("APP_URL", "http://localhost:8000")  # used in the google redirect url
 
+# set DEBUG=true in .env to disable the HTML cache and always read files fresh from disk
+# useful during local development so you don't have to restart the server after every HTML edit
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+
+# cap on how many bytes we read from any POST body (except /api/voice which has its own 10 MB cap)
+# prevents a malicious request with a huge Content-Length from exhausting server memory
+MAX_REQUEST_BODY = 1 * 1024 * 1024   # 1 MB
+
 # stores HTML files in memory after the first time they are read from disk
 # so the second request onwards doesnt hit the disk at all, just returns from memory
+# bypassed entirely when DEBUG=true
 HTML_CACHE = {}
 
 
@@ -47,6 +57,22 @@ class Handler(BaseHTTPRequestHandler):
         # we leave it empty so the terminal is clean, our own print() calls are easier to read
         pass
 
+    def _serve_html(self, filename):
+        # serves a static HTML file from disk, caching the bytes in memory after the first read
+        # if DEBUG=true in .env, the cache is skipped and the file is always re-read from disk
+        # this lets you edit HTML without restarting the server during local development
+        if not DEBUG and filename in HTML_CACHE:
+            data = HTML_CACHE[filename]
+        else:
+            with open(filename, "rb") as f:
+                data = f.read()
+            if not DEBUG:
+                HTML_CACHE[filename] = data
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html")
+        self.end_headers()
+        self.wfile.write(data)
+
     # -------------------------------------------------------------------------
     # GET requests - browser asking for a page or data
     # -------------------------------------------------------------------------
@@ -54,13 +80,7 @@ class Handler(BaseHTTPRequestHandler):
 
         # serve the main chat page
         if self.path == '/' or self.path == '/index.html':
-            if 'index.html' not in HTML_CACHE:  # only read the file on the first request
-                with open("index.html", "rb") as f:
-                    HTML_CACHE['index.html'] = f.read()
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html")
-            self.end_headers()
-            self.wfile.write(HTML_CACHE['index.html'])
+            self._serve_html('index.html')
 
         # health check - returns a JSON snapshot of the server status
         # useful to quickly verify if everything is running correctly
@@ -91,23 +111,11 @@ class Handler(BaseHTTPRequestHandler):
 
         # serve the admin dashboard page
         elif self.path == '/admin' or self.path == '/admin.html':
-            if 'admin.html' not in HTML_CACHE:
-                with open("admin.html", "rb") as f:
-                    HTML_CACHE['admin.html'] = f.read()
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html")
-            self.end_headers()
-            self.wfile.write(HTML_CACHE['admin.html'])
+            self._serve_html('admin.html')
 
         # serve the community board page
         elif self.path == '/community' or self.path == '/community.html':
-            if 'community.html' not in HTML_CACHE:
-                with open("community.html", "rb") as f:
-                    HTML_CACHE['community.html'] = f.read()
-            self.send_response(200)
-            self.send_header("Content-Type", "text/html")
-            self.end_headers()
-            self.wfile.write(HTML_CACHE['community.html'])
+            self._serve_html('community.html')
 
         # return the list of community posts as JSON
         # community.html calls this when the page loads to show all the student posts
@@ -116,8 +124,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
-            # get the facts list, or an empty list if there are none yet
-            self.wfile.write(json.dumps(db.community_data.get('facts', [])).encode())
+            # strip email before sending to the public — contributor emails stay private
+            safe_facts = [{k: v for k, v in f.items() if k != 'email'} for f in db.community_data.get('facts', [])]
+            self.wfile.write(json.dumps(safe_facts).encode())
 
         # start the google login flow
         # redirects the browser to googles login page with our app details
@@ -175,15 +184,16 @@ class Handler(BaseHTTPRequestHandler):
                 # sha256(random 32 bytes) gives us a secure random token that cant be guessed
                 session_token = hashlib.sha256(os.urandom(32)).hexdigest()
                 SESSIONS[session_token] = {
-                    'email':   email,
-                    'name':    user_info.get('name', email.split('@')[0]),  # fallback to username part of email
-                    'picture': user_info.get('picture', '')  # google profile photo url
+                    'email':      email,
+                    'name':       user_info.get('name', email.split('@')[0]),
+                    'picture':    user_info.get('picture', ''),
+                    'created_at': time.time()   # used by get_session() to enforce the 7-day TTL
                 }
                 # send them to the community page and set the cookie in their browser
                 self.send_response(302)
                 self.send_header('Location', '/community')
-                # HttpOnly means javascript cannot read this cookie (security best practice)
-                self.send_header('Set-Cookie', f'session={session_token}; Path=/; HttpOnly')
+                # HttpOnly = JS cannot read it; Secure = only sent over HTTPS; SameSite=Lax = CSRF protection
+                self.send_header('Set-Cookie', f'session={session_token}; Path=/; HttpOnly; Secure; SameSite=Lax')
                 self.end_headers()
 
             except Exception as e:
@@ -201,69 +211,80 @@ class Handler(BaseHTTPRequestHandler):
                 c = c.strip()
                 if c.startswith('session='):
                     session_token = c[8:]  # cut off the "session=" prefix to get just the token value
-            user = SESSIONS.get(session_token)  # look up the user from the token
+            user = get_session(session_token)  # returns None if token missing or expired
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps(user or {}).encode())  # send {} if not logged in
 
-            # note: the admin check below this is unreachable code (the return from wfile.write above exits)
-            # the /api/admin/stats and /api/admin/data GET routes below this block also appear unreachable
-            # they were probably intended to be separate elif branches - worth fixing eventually
-            auth_header = self.headers.get("Authorization")
-            if auth_header != f"Bearer {ADMIN_PASSWORD}":
+        # admin: server stats — uptime, query count, provider breakdown
+        # requires Authorization: Bearer <ADMIN_PASSWORD> header
+        elif self.path == '/api/admin/stats':
+            if not secrets.compare_digest(
+                self.headers.get("Authorization", ""),
+                f"Bearer {ADMIN_PASSWORD}"
+            ):
                 self.send_response(401)
+                self.send_header("Content-Type", "application/json")
                 self.end_headers()
                 self.wfile.write(b"Unauthorized")
                 return
+            uptime = time.time() - server_start_time
+            avg_time = (
+                metrics["total_response_time"] / metrics["total_queries"]
+                if metrics["total_queries"] > 0 else 0
+            )
+            stats = {
+                "uptime_seconds":    uptime,
+                "total_queries":     metrics["total_queries"],
+                "avg_response_time": avg_time,
+                "provider_usage":    metrics["provider_usage"]
+            }
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(stats).encode())
 
-            if self.path == '/api/admin/stats':
-                uptime = time.time() - server_start_time
-                avg_time = metrics["total_response_time"] / metrics["total_queries"] if metrics["total_queries"] > 0 else 0
-                stats = {
-                    "uptime_seconds":   uptime,
-                    "total_queries":    metrics["total_queries"],
-                    "avg_response_time": avg_time,
-                    "provider_usage":   metrics["provider_usage"]
+        # admin: fetch current in-memory campus data for a given source
+        # usage: GET /api/admin/data?source=canteen
+        # requires Authorization: Bearer <ADMIN_PASSWORD> header
+        elif self.path.startswith('/api/admin/data'):
+            if not secrets.compare_digest(
+                self.headers.get("Authorization", ""),
+                f"Bearer {ADMIN_PASSWORD}"
+            ):
+                self.send_response(401)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b"Unauthorized")
+                return
+            # parse_qs handles multiple query params without breaking source extraction
+            source = parse_qs(urlparse(self.path).query).get('source', [''])[0]
+            allowed_sources = ['canteen', 'timetable', 'xerox', 'vending', 'events', 'community']
+            if source in allowed_sources:
+                data_map = {
+                    'canteen':   db.canteen_data,
+                    'timetable': db.timetable_data,
+                    'xerox':     db.xerox_data,
+                    'vending':   db.vending_data,
+                    'events':    db.events_data,
+                    'community': db.community_data
                 }
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
-                self.wfile.write(json.dumps(stats).encode())
-
-            elif self.path.startswith('/api/admin/data?source='):
-                source = self.path.split('=')[-1]
-                allowed_sources = ['canteen', 'timetable', 'xerox', 'vending', 'events', 'community']
-                if source in allowed_sources:
-                    try:
-                        # read directly from in-memory db variables instead of hitting disk
-                        data_map = {
-                            'canteen':   db.canteen_data,
-                            'timetable': db.timetable_data,
-                            'xerox':     db.xerox_data,
-                            'vending':   db.vending_data,
-                            'events':    db.events_data,
-                            'community': db.community_data
-                        }
-                        content = json.dumps(data_map.get(source, {})).encode()
-                        self.send_response(200)
-                        self.send_header("Content-Type", "application/json")
-                        self.end_headers()
-                        self.wfile.write(content)
-                    except Exception:
-                        self.send_response(404)
-                        self.end_headers()
-                else:
-                    self.send_response(400)
-                    self.end_headers()
+                self.wfile.write(json.dumps(data_map.get(source, {})).encode())
             else:
-                self.send_response(404)
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
                 self.end_headers()
+                self.wfile.write(json.dumps({"error": "Unknown source"}).encode())
 
         # no matching route found
         else:
             self.send_response(404)
             self.end_headers()
+
 
     # -------------------------------------------------------------------------
     # POST requests - browser sending data to be processed
@@ -274,13 +295,13 @@ class Handler(BaseHTTPRequestHandler):
         # the browser records audio and sends the raw bytes here
         # we save it to a temp file, transcribe it, then ask the AI
         if self.path == '/api/voice':
+            from app.services.voice import transcribe_file
+            import tempfile
+            temp_file_path = None
             try:
-                length = int(self.headers["Content-Length"])
-                audio_data = self.rfile.read(length)   # read the raw audio bytes
-
-                from app.services.voice import transcribe_file
-                import tempfile
-                import os
+                MAX_AUDIO = 10 * 1024 * 1024   # 10 MB cap — a few minutes of audio is well under this
+                length = min(int(self.headers.get("Content-Length", 0)), MAX_AUDIO)
+                audio_data = self.rfile.read(length)
 
                 # save the audio to a temporary file on disk so whisper can read it
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
@@ -289,8 +310,6 @@ class Handler(BaseHTTPRequestHandler):
 
                 # send to groq whisper and get back the text
                 user_message = transcribe_file(temp_file_path)
-                if os.path.exists(temp_file_path):
-                    os.remove(temp_file_path)   # clean up the temp file
 
                 # reject very short transcriptions - probably just noise or accidental taps
                 if len(user_message.split()) < 2:
@@ -308,14 +327,20 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 print(f"Web Voice Error: {e}")
                 self.send_response(500)
+                self.send_header("Content-Type", "application/json")
                 self.end_headers()
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+            finally:
+                # always delete the temp file whether transcription succeeded or failed
+                if temp_file_path and os.path.exists(temp_file_path):
+                    os.remove(temp_file_path)
 
         # main text chat endpoint
         # the chat page sends {"question": "..."} here and gets {"answer": "..."} back
         elif self.path == '/ask':
             try:
-                length = int(self.headers["Content-Length"])
+                length = min(int(self.headers.get("Content-Length", 0)), MAX_REQUEST_BODY)
                 body = json.loads(self.rfile.read(length))   # parse the JSON body
                 answer = ask(body["question"])               # send to the AI
             except Exception as e:
@@ -329,7 +354,7 @@ class Handler(BaseHTTPRequestHandler):
         # used by the community page contribute form
         elif self.path == '/api/contribute':
             try:
-                length = int(self.headers["Content-Length"])
+                length = min(int(self.headers.get("Content-Length", 0)), MAX_REQUEST_BODY)
                 body = json.loads(self.rfile.read(length))
                 email = body.get('email', '').strip().lower()
                 info  = body.get('info', '').strip()
@@ -378,7 +403,7 @@ class Handler(BaseHTTPRequestHandler):
         # if a fact gets 2 or more flags it gets automatically deleted
         elif self.path == '/api/flag':
             try:
-                length = int(self.headers["Content-Length"])
+                length = min(int(self.headers.get("Content-Length", 0)), MAX_REQUEST_BODY)
                 body = json.loads(self.rfile.read(length))
                 chat_msg = body.get('message', '')   # the bot answer the student flagged
 
@@ -410,9 +435,12 @@ If yes, reply with ONLY the 'id' string of that fact (e.g. 5a1b3c99). If none se
                                 else:
                                     print(f"🚩 Fact {fact['id']} flagged. Total flags: {fact['flags']}")
 
-                                # save the updated flag count to disk
-                                with open("data/community.json", "w") as f:
-                                    json.dump(db.community_data, f, indent=4)
+                                # save the updated flag count: prefer Supabase, fall back to local file
+                                if db.supabase:
+                                    db.supabase.table("campus_data").upsert({"id": "community", "data": db.community_data}).execute()
+                                else:
+                                    with open("data/community.json", "w") as f:
+                                        json.dump(db.community_data, f, indent=4)
                                 break   # only process the first match
                     except Exception as e:
                         print(f"Moderator AI failed: {e}")
@@ -428,20 +456,23 @@ If yes, reply with ONLY the 'id' string of that fact (e.g. 5a1b3c99). If none se
 
         # admin saves updated campus data through the admin panel
         # requires the Authorization: Bearer <ADMIN_PASSWORD> header
-        elif self.path.startswith('/api/admin/data?source='):
-            auth_header = self.headers.get("Authorization")
-            if auth_header != f"Bearer {ADMIN_PASSWORD}":
+        elif self.path.startswith('/api/admin/data'):
+            if not secrets.compare_digest(
+                self.headers.get("Authorization", ""),
+                f"Bearer {ADMIN_PASSWORD}"
+            ):
                 self.send_response(401)
+                self.send_header("Content-Type", "application/json")
                 self.end_headers()
                 self.wfile.write(b"Unauthorized")
                 return
 
-            # get which data source the admin wants to update from the url
-            source = self.path.split('=')[-1]   # eg "canteen"
+            # parse_qs handles multi-param URLs without breaking source extraction
+            source = parse_qs(urlparse(self.path).query).get('source', [''])[0]
             allowed_sources = ['canteen', 'timetable', 'xerox', 'vending', 'events']
             if source in allowed_sources:
                 try:
-                    length = int(self.headers["Content-Length"])
+                    length = min(int(self.headers.get("Content-Length", 0)), MAX_REQUEST_BODY)
                     body_text = self.rfile.read(length).decode('utf-8')
                     body_json = json.loads(body_text)   # parse the new JSON data the admin sent
 
@@ -485,9 +516,9 @@ If yes, reply with ONLY the 'id' string of that fact (e.g. 5a1b3c99). If none se
                     c = c.strip()
                     if c.startswith('session='):
                         session_token = c[8:]
-                user = SESSIONS.get(session_token)   # None if not logged in
+                user = get_session(session_token)   # None if not logged in or session expired
 
-                length = int(self.headers["Content-Length"])
+                length = min(int(self.headers.get("Content-Length", 0)), MAX_REQUEST_BODY)
                 body = json.loads(self.rfile.read(length))
                 info = body.get('info', '').strip()
 
@@ -540,7 +571,7 @@ If yes, reply with ONLY the 'id' string of that fact (e.g. 5a1b3c99). If none se
         # finds the post by ID and adds 1 to its upvote count, then saves to supabase
         elif self.path == '/api/upvote':
             try:
-                length = int(self.headers["Content-Length"])
+                length = min(int(self.headers.get("Content-Length", 0)), MAX_REQUEST_BODY)
                 body = json.loads(self.rfile.read(length))
                 post_id = body.get('id', '')   # the 8 char ID of the post to upvote
 

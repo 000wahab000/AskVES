@@ -105,6 +105,15 @@ def expand_query(question):
     return question
 
 
+def warm_up():
+    # call this after db.init_db() to pre-build the synonym map using the loaded timetable data
+    # without this, the map is built lazily on the very first question, which may arrive before
+    # the DB data is fully in memory (eg a warmup ping from Railway right after deploy)
+    global SYNONYM_MAP
+    SYNONYM_MAP = init_synonyms()
+    print(f"✓ Synonym map pre-built ({len(SYNONYM_MAP)} patterns)")
+
+
 # JSON_CACHE stores already-serialized versions of each data dictionary
 # when the same data hasnt changed, we reuse the string instead of re-serializing it every time
 # this matters because json.dumps on a large timetable JSON can be slow
@@ -112,13 +121,17 @@ JSON_CACHE = {}
 
 def get_json_str(data_dict, name):
     # converts a data dictionary to a JSON string, with caching
-    # id(data_dict) is pythons way of getting the memory address of an object
-    # if the admin updates canteen_data, a NEW dict is created so id() changes and we re-serialize
-    # if nothing changed, same id means same data so we return the cached string
-    dict_id = id(data_dict)
-    if JSON_CACHE.get(name, {}).get('id') != dict_id:
+    # cache key = (id(data_dict), db_version)
+    #   id()        changes when update_data() replaces the dict with a new object
+    #   db_version  changes every time update_data() is called, catching the edge case
+    #               where Python's GC frees the old dict and reuses the same memory address
+    #               for a new dict (making id() look unchanged when the data actually changed)
+    source_name = name.split('_')[0]   # 'timetable_MONDAY' -> 'timetable'
+    version = db._data_versions.get(source_name, 0)
+    cache_key = (id(data_dict), version)
+    if JSON_CACHE.get(name, {}).get('key') != cache_key:
         JSON_CACHE[name] = {
-            'id': dict_id,
+            'key': cache_key,
             'str': json.dumps(data_dict, separators=(',', ':'))  # compact format, no extra spaces
         }
     return JSON_CACHE[name]['str']

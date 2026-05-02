@@ -1,0 +1,77 @@
+flowchart TB
+  %% ===== Clients =====
+  subgraph C[Clients]
+    B1[Browser User\nindex.html]
+    B2[Admin User\nadmin.html]
+    B3[Community User\ncommunity.html]
+    W1[WhatsApp User]
+  end
+
+  %% ===== Web/UI & Routing =====
+  subgraph W[Web/UI & Routing]
+    M[main.py / app.main\nHTTPServer bootstrap]
+    R[app.core.router.Handler\nGET/POST routes]
+    WH[app.routes.webhook\nhandle_whatsapp_webhook()]
+  end
+
+  %% ===== Core Logic & Services =====
+  subgraph S[Core Logic & Services]
+    I[app.core.intents\nask(), expand_query(), context builder]
+    ST[app.core.state\nSESSIONS, metrics, server_start_time]
+    AI[app.services.ai\nMultiAIProvider\nGroq -> Gemini fallback]
+    VO[app.services.voice\ntranscribe_audio(), transcribe_file()]
+    DB[app.services.db\ninit_db(), update_data(), in-memory datasets]
+    H[app.utils.helpers\nget_current_slot()]
+    LG[app.utils.logger]
+  end
+
+  %% ===== Data & External Providers =====
+  subgraph D[Data Stores & External Providers]
+    SUP[Supabase\ncampus_data table]
+    JSON[Local JSON fallback\ndata/*.json]
+    CACHE[In-memory caches\nHTML_CACHE, JSON_CACHE]
+    GROQ[Groq API\nLLM + Whisper]
+    GEM[Google Gemini API]
+    GOOG[Google OAuth APIs]
+    TW[Twilio Media/Webhook API]
+  end
+
+  %% ===== Request Entrypoints =====
+  B1 -->|HTTP GET/POST| M
+  B2 -->|HTTP GET/POST| M
+  B3 -->|HTTP GET/POST| M
+  M -->|dispatch requests| R
+  W1 -->|Twilio webhook POST| WH
+  R -->|/whatsapp| WH
+
+  %% ===== Route Flows =====
+  R -->|/ask, /api/flag| I
+  R -->|/api/voice| VO
+  R -->|/api/community, /api/discuss,\n/api/upvote, admin data| DB
+  R -->|sessions + metrics| ST
+  R -->|/auth/google, /auth/callback| GOOG
+
+  %% ===== Service Interactions =====
+  WH -->|media transcription| VO
+  I -->|current day/slot| H
+  I -->|context retrieval| DB
+  I -->|LLM response generation| AI
+  I -->|JSON cache use| CACHE
+  R -->|HTML cache use| CACHE
+  AI --> GROQ
+  AI --> GEM
+  VO -->|download media| TW
+  VO -->|Whisper transcription| GROQ
+  DB <--> SUP
+  DB <--> JSON
+
+  %% ===== Visual Legend by color =====
+  classDef handler fill:#dbeafe,stroke:#1d4ed8,color:#111827;
+  classDef service fill:#ede9fe,stroke:#6d28d9,color:#111827;
+  classDef data fill:#dcfce7,stroke:#15803d,color:#111827;
+  classDef external fill:#ffedd5,stroke:#ea580c,color:#111827;
+
+  class M,R,WH handler;
+  class I,ST,AI,VO,DB,H,LG service;
+  class SUP,JSON,CACHE data;
+  class GROQ,GEM,GOOG,TW external;
