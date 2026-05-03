@@ -1,6 +1,4 @@
-# logger.py - centralised logging for AskVES
-# wraps Python's built-in logging module so every module can import and use
-# log_info / log_error without caring about handler setup
+"""Thin wrapper around stdlib logging."""
 
 import logging
 
@@ -11,8 +9,12 @@ logging.basicConfig(
 )
 _logger = logging.getLogger('askves')
 
+
 def log_info(msg):
+    """Log INFO."""
     _logger.info(msg)
 
+
 def log_error(msg):
+    """Log ERROR."""
     _logger.error(msg)

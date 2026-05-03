@@ -1,3 +1,5 @@
+"""Upload data/*.json rows into Supabase campus_data."""
+
 import os
 import json
 from dotenv import load_dotenv
@@ -32,7 +34,6 @@ for name in files:
             data = json.load(f)
             
         try:
-            # Upsert into supabase (insert or update)
             supabase.table("campus_data").upsert({
                 "id": name,
                 "data": data
