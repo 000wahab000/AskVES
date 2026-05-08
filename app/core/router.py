@@ -1,4 +1,5 @@
 from http.server import BaseHTTPRequestHandler
+from pathlib import Path
 import json, os, uuid, hashlib, urllib.request, time
 from urllib.parse import urlencode, parse_qs, urlparse
 from datetime import datetime
@@ -13,6 +14,7 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 APP_URL = os.getenv("APP_URL", "http://localhost:8000")
+ROOT_DIR = Path(__file__).resolve().parents[2]
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -20,7 +22,7 @@ class Handler(BaseHTTPRequestHandler):
     
     def do_GET(self):
         if self.path == '/' or self.path == '/index.html':
-            with open("index.html", "rb") as f:
+            with open(ROOT_DIR / "index.html", "rb") as f:
                 content = f.read()
             self.send_response(200)
             self.send_header("Content-Type", "text/html")
@@ -53,7 +55,7 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(health, indent=2).encode())
         
         elif self.path == '/admin' or self.path == '/admin.html':
-            with open("admin.html", "rb") as f:
+            with open(ROOT_DIR / "admin.html", "rb") as f:
                 content = f.read()
             self.send_response(200)
             self.send_header("Content-Type", "text/html")
@@ -61,7 +63,7 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(content)
 
         elif self.path == '/community' or self.path == '/community.html':
-            with open("community.html", "rb") as f:
+            with open(ROOT_DIR / "community.html", "rb") as f:
                 content = f.read()
             self.send_response(200)
             self.send_header("Content-Type", "text/html")
