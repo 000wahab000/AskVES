@@ -2,6 +2,7 @@ import os
 import json
 from dotenv import load_dotenv
 from supabase import create_client, Client
+from app.utils.logger import logger
 
 load_dotenv()
 
@@ -9,10 +10,10 @@ url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 
 if not url or not key:
-    print("❌ Missing SUPABASE_URL or SUPABASE_KEY in .env file")
+    logger.error("❌ Missing SUPABASE_URL or SUPABASE_KEY in .env file")
     exit(1)
 
-print("Connecting to Supabase...")
+logger.info("Connecting to Supabase...")
 supabase: Client = create_client(url, key)
 
 files = [
@@ -24,7 +25,7 @@ files = [
     "community"
 ]
 
-print("Starting migration...")
+logger.info("Starting migration...")
 for name in files:
     filepath = f"data/{name}.json"
     if os.path.exists(filepath):
@@ -37,10 +38,10 @@ for name in files:
                 "id": name,
                 "data": data
             }).execute()
-            print(f"✅ Migrated {name}.json")
+            logger.info(f"✅ Migrated {name}.json")
         except Exception as e:
-            print(f"❌ Failed to migrate {name}.json: {e}")
+            logger.error(f"❌ Failed to migrate {name}.json: {e}")
     else:
-        print(f"⚠️ File {filepath} not found, skipping.")
+        logger.warning(f"⚠️ File {filepath} not found, skipping.")
         
-print("🚀 Migration complete!")
+logger.info("🚀 Migration complete!")

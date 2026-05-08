@@ -1,5 +1,6 @@
 import os, json
 from dotenv import load_dotenv
+from app.utils.logger import logger
 
 load_dotenv()
 
@@ -21,7 +22,7 @@ community_data = {}
 def init_db():
     global canteen_data, timetable_data, xerox_data, vending_data, events_data, community_data
     if supabase:
-        print("🔄 Fetching campus data from Supabase...")
+        logger.info("🔄 Fetching campus data from Supabase...")
         try:
             response = supabase.table("campus_data").select("*").execute()
             for row in response.data:
@@ -31,11 +32,11 @@ def init_db():
                 elif row["id"] == "vending": vending_data = row["data"]
                 elif row["id"] == "events": events_data = row["data"]
                 elif row["id"] == "community": community_data = row["data"]
-            print("✅ Supabase data loaded successfully!")
+            logger.info("✅ Supabase data loaded successfully!")
         except Exception as e:
-            print(f"❌ Failed to load from Supabase: {e}")
+            logger.error(f"❌ Failed to load from Supabase: {e}")
     else:
-        print("⚠️ Supabase not connected. Using empty data.")
+        logger.warning("⚠️ Supabase not connected. Using empty data.")
 
 def update_data(source, new_data):
     global canteen_data, timetable_data, xerox_data, vending_data, events_data, community_data

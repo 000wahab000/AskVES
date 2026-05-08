@@ -8,6 +8,7 @@ from app.core.state import SESSIONS, metrics, server_start_time
 from app.core.intents import ask
 from app.routes.webhook import handle_whatsapp_webhook
 from app.services.ai import ai_manager
+from app.utils.logger import logger
 
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
@@ -127,7 +128,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header('Set-Cookie', f'session={session_token}; Path=/; HttpOnly')
                 self.end_headers()
             except Exception as e:
-                print(f'OAuth error: {e}')
+                logger.error(f'OAuth error: {e}')
                 self.send_response(302)
                 self.send_header('Location', '/?auth=error')
                 self.end_headers()
@@ -268,15 +269,15 @@ If yes, reply with ONLY the 'id' string of that fact (e.g. 5a1b3c99). If none se
                                 fact['flags'] = fact.get('flags', 0) + 1
                                 if fact['flags'] >= 2:
                                     db.community_data['facts'].remove(fact)
-                                    print(f"🚩 Auto-Deleted fact {fact['id']} due to 2+ flags!")
+                                    logger.warning(f"🚩 Auto-Deleted fact {fact['id']} due to 2+ flags!")
                                 else:
-                                    print(f"🚩 Fact {fact['id']} flagged. Total flags: {fact['flags']}")
+                                    logger.warning(f"🚩 Fact {fact['id']} flagged. Total flags: {fact['flags']}")
                                 
                                 with open("data/community.json", "w") as f:
                                     json.dump(db.community_data, f, indent=4)
                                 break
                     except Exception as e:
-                        print(f"Moderator AI failed: {e}")
+                        logger.error(f"Moderator AI failed: {e}")
                         
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")

@@ -1,6 +1,7 @@
 import json
 from urllib.parse import parse_qs
 from app.core.intents import ask
+from app.utils.logger import logger
 
 try:
     from twilio.twiml.messaging_response import MessagingResponse
@@ -35,6 +36,6 @@ def handle_whatsapp_webhook(handler):
             handler.wfile.write(json.dumps({'answer': answer}).encode())
 
     except Exception as e:
-        print(f"WhatsApp Webhook Error: {e}")
+        logger.error(f"WhatsApp Webhook Error: {e}")
         handler.send_response(500)
         handler.end_headers()
