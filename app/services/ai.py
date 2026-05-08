@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from app.utils.logger import logger
 
 load_dotenv()
 
@@ -40,7 +41,7 @@ class MultiAIProvider:
                 try:
                     groq_clients.append(Groq(api_key=k))
                 except Exception as e:
-                    print(f"✗ Failed to init a Groq client: {e}")
+                    logger.error(f"✗ Failed to init a Groq client: {e}")
             
             if groq_clients:
                 self.providers['groq'] = {
@@ -49,7 +50,7 @@ class MultiAIProvider:
                     'model': 'llama-3.1-8b-instant',
                     'name': 'Groq'
                 }
-                print(f"✓ Groq initialized with {len(groq_clients)} key(s)")
+                logger.info(f"✓ Groq initialized with {len(groq_clients)} key(s)")
         
         gemini_key = os.getenv("GEMINI_API_KEY")
         if GEMINI_AVAILABLE and gemini_key:
@@ -64,9 +65,9 @@ class MultiAIProvider:
                         'top_p': 0.95
                     }
                 }
-                print("✓ Gemini initialized")
+                logger.info("✓ Gemini initialized")
             except Exception as e:
-                print(f"✗ Gemini failed: {e}")
+                logger.error(f"✗ Gemini failed: {e}")
     
     def is_rate_limit(self, error):
         err = str(error).lower()
@@ -108,10 +109,10 @@ class MultiAIProvider:
                 err_msg = f"{provider_name}: {str(e)}"
                 errors.append(err_msg)
                 if self.is_rate_limit(e):
-                    print(f"⚠️ {provider_name} rate limited, switching...")
+                    logger.warning(f"⚠️ {provider_name} rate limited, switching...")
                     continue
                 else:
-                    print(f"⚠️ {provider_name} error: {e}")
+                    logger.error(f"⚠️ {provider_name} error: {e}")
                     continue
         raise Exception(f"All AI providers failed: {'; '.join(errors)}")
     
@@ -135,10 +136,10 @@ class MultiAIProvider:
                 return response.choices[0].message.content, f"Groq-{model} (Key {idx+1})"
             except Exception as e:
                 if self.is_rate_limit(e):
-                    print(f"🔄 Groq Key {idx+1} rate limited, trying next key...")
+                    logger.warning(f"🔄 Groq Key {idx+1} rate limited, trying next key...")
                     continue
                 else:
-                    print(f"⚠️ Groq Key {idx+1} error: {e}")
+                    logger.error(f"⚠️ Groq Key {idx+1} error: {e}")
                     continue
         raise Exception("All Groq API keys failed or hit rate limits.")
     
