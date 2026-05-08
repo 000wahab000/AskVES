@@ -15,10 +15,13 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 APP_URL = os.getenv("APP_URL", "http://localhost:8000")
 def find_project_root() -> Path:
-    """Locate the project root by searching for index.html in parent directories."""
+    """Locate the project root by searching for index.html and app/ in parents.
+
+    This runs at import time to fail fast if the expected project layout is missing.
+    """
     current = Path(__file__).resolve()
     for parent in current.parents:
-        if (parent / "index.html").exists():
+        if (parent / "index.html").exists() and (parent / "app").is_dir():
             return parent
     raise FileNotFoundError("Could not locate project root containing index.html.")
 
