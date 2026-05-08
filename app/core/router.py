@@ -14,14 +14,14 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 APP_URL = os.getenv("APP_URL", "http://localhost:8000")
-def _find_root_dir() -> Path:
+def find_project_root() -> Path:
     current = Path(__file__).resolve()
     for parent in current.parents:
         if (parent / "index.html").exists():
             return parent
-    return current.parents[2]
+    return current.parent
 
-ROOT_DIR = _find_root_dir()
+ROOT_DIR = find_project_root()
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
