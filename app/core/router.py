@@ -23,7 +23,7 @@ def find_project_root() -> Path:
     for parent in current.parents:
         if (parent / "index.html").exists() and (parent / "app").is_dir():
             return parent
-    raise FileNotFoundError("Could not locate project root containing index.html.")
+    raise FileNotFoundError("Could not locate project root containing index.html and app/ directory.")
 
 ROOT_DIR = find_project_root()
 
