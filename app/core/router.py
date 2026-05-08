@@ -1,4 +1,5 @@
 from http.server import BaseHTTPRequestHandler
+from pathlib import Path
 import json, os, uuid, hashlib, urllib.request, time
 from urllib.parse import urlencode, parse_qs, urlparse
 from datetime import datetime
@@ -13,6 +14,21 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 APP_URL = os.getenv("APP_URL", "http://localhost:8000")
+def find_project_root() -> Path:
+    """Locate the project root by searching for index.html and app/ in parents.
+
+    This is evaluated once at import time to validate the project layout before requests.
+    """
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        if (parent / "index.html").exists() and (parent / "app").is_dir():
+            return parent
+    raise FileNotFoundError(
+        "Could not locate project root containing index.html and app/ directory. "
+        "Ensure the application is run from within the project directory structure."
+    )
+
+ROOT_DIR = find_project_root()
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
@@ -20,7 +36,7 @@ class Handler(BaseHTTPRequestHandler):
     
     def do_GET(self):
         if self.path == '/' or self.path == '/index.html':
-            with open("index.html", "rb") as f:
+            with open(ROOT_DIR / "index.html", "rb") as f:
                 content = f.read()
             self.send_response(200)
             self.send_header("Content-Type", "text/html")
@@ -53,7 +69,7 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(health, indent=2).encode())
         
         elif self.path == '/admin' or self.path == '/admin.html':
-            with open("admin.html", "rb") as f:
+            with open(ROOT_DIR / "admin.html", "rb") as f:
                 content = f.read()
             self.send_response(200)
             self.send_header("Content-Type", "text/html")
@@ -61,7 +77,7 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(content)
 
         elif self.path == '/community' or self.path == '/community.html':
-            with open("community.html", "rb") as f:
+            with open(ROOT_DIR / "community.html", "rb") as f:
                 content = f.read()
             self.send_response(200)
             self.send_header("Content-Type", "text/html")
