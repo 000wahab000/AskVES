@@ -17,7 +17,7 @@ APP_URL = os.getenv("APP_URL", "http://localhost:8000")
 def find_project_root() -> Path:
     """Locate the project root by searching for index.html and app/ in parents.
 
-    This runs at import time to fail fast if the expected project layout is missing.
+    This is evaluated once at import time to validate the project layout before requests.
     """
     current = Path(__file__).resolve()
     for parent in current.parents:
