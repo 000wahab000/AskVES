@@ -11,10 +11,12 @@ from app.routes.webhook import handle_whatsapp_webhook
 from app.services.ai import ai_manager
 from app.utils.logger import logger
 
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 APP_URL = os.getenv("APP_URL", "http://localhost:8000")
+if not ADMIN_PASSWORD:
+    raise ValueError("ADMIN_PASSWORD environment variable is not set.")
 def find_project_root() -> Path:
     """Locate the project root by searching for index.html and app/ in parents.
 
