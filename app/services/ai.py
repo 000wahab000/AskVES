@@ -74,7 +74,7 @@ class MultiAIProvider:
         return any(x in err for x in ['429', 'rate limit', 'quota', 'capacity', 'too many requests'])
     
     def format_for_gemini(self, messages):
-        history = []
+        history = [-6]
         system_context = ""
         current_user_msg = ""
         
@@ -125,10 +125,14 @@ class MultiAIProvider:
         for i in range(len(clients)):
             idx = (start_idx + i) % len(clients)
             client = clients[idx]
+            # this will rate limit on the context history it contains 
+            system_msgs = [m for m in messages if m.get('role') == 'system' ]
+            recent_msgs = [m for m in messages if m.get('role') != 'system' ][-4:]
+            trimmed = system_msgs + recent_msgs
             try:
                 response = client.chat.completions.create(
                     model=model,
-                    messages=messages,
+                    messages=trimmed,
                     temperature=0.7,
                     max_tokens=512
                 )

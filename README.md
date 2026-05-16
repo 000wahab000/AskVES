@@ -46,7 +46,7 @@ git clone https://github.com/000wahab000/AskVES
 cd AskVES
 pip install -r requirements.txt
 # Add .env with GROQ_API_KEY, GEMINI_API_KEY, and SUPABASE_URL/KEY
-python main.py
+py main.py
 # Open http://localhost:8000
 ```
 
