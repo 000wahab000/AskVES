@@ -1,6 +1,7 @@
 import os, json
 from dotenv import load_dotenv
 from app.utils.logger import logger
+from pathlib import Path
 
 load_dotenv()
 
@@ -37,6 +38,16 @@ def init_db():
             logger.error(f"❌ Failed to load from Supabase: {e}")
     else:
         logger.warning("⚠️ Supabase not connected. Using empty data.")
+        try:
+            base_dir = Path(__file__).resolve().parent.parent.parent
+            canteen_data = json.load(open(base_dir / "data" / "canteen.json"))
+            timetable_data = json.load(open(base_dir / "data" / "timetable.json"))
+            xerox_data = json.load(open(base_dir / "data" / "xerox.json"))
+            events_data = json.load(open(base_dir / "data" / "events.json"))
+            community_data = json.load(open(base_dir / "data" / "community.json"))
+            logger.info("Local json data imported successfully")
+        except Exception as e:
+            logger.error(f"Failed to load local data: {e}")
 
 def update_data(source, new_data):
     global canteen_data, timetable_data, xerox_data, vending_data, events_data, community_data
