@@ -18,14 +18,6 @@ except ImportError:
     GEMINI_AVAILABLE = False
 
 class MultiAIProvider:
-    """
-    Smart fallback system:
-    1. Try Groq (llama-3.3-70b) 
-    2. If rate limited, try Groq 8B model
-    3. If still failing, try Gemini
-    4. Track which provider succeeded
-    """
-    
     def __init__(self):
         self.providers = {}
         self._init_providers()
@@ -74,7 +66,7 @@ class MultiAIProvider:
         return any(x in err for x in ['429', 'rate limit', 'quota', 'capacity', 'too many requests'])
     
     def format_for_gemini(self, messages):
-        history = [-6]
+        history = []
         system_context = ""
         current_user_msg = ""
         
@@ -126,6 +118,7 @@ class MultiAIProvider:
             idx = (start_idx + i) % len(clients)
             client = clients[idx]
             # this will rate limit on the context history it contains 
+            # which will increase the response time of the application
             system_msgs = [m for m in messages if m.get('role') == 'system' ]
             recent_msgs = [m for m in messages if m.get('role') != 'system' ][-4:]
             trimmed = system_msgs + recent_msgs

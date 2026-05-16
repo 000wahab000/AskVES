@@ -102,7 +102,7 @@ class Handler(BaseHTTPRequestHandler):
                 'scope': 'openid email profile',
                 'hd': 'ves.ac.in',
                 'prompt': 'select_account'
-            })
+                })
             self.send_response(302)
             self.send_header('Location', f'https://accounts.google.com/o/oauth2/v2/auth?{params}')
             self.end_headers()
@@ -269,14 +269,12 @@ class Handler(BaseHTTPRequestHandler):
                 
                 if db.community_data.get('facts'):
                     mod_prompt = f"""You are an auto-moderator for AskVES.
-A user flagged the following bot message as FAKE or INCORRECT:
-"{chat_msg}"
-
-Here are the crowdsourced facts we have:
-{json.dumps(db.community_data['facts'])}
-
-Does any specific community fact seem directly responsible for generating that flagged message? 
-If yes, reply with ONLY the 'id' string of that fact (e.g. 5a1b3c99). If none seem relevant, reply with exactly NONE."""
+                    A user flagged the following bot message as FAKE or INCORRECT:
+                    "{chat_msg}"
+                    Here are the crowdsourced facts we have:
+                    {json.dumps(db.community_data['facts'])}
+                    Does any specific community fact seem directly responsible for generating that flagged message? 
+                    If yes, reply with ONLY the 'id' string of that fact (e.g. 5a1b3c99). If none seem relevant, reply with exactly NONE."""
                     
                     try:
                         ans, _ = ai_manager.generate([{"role": "system", "content": mod_prompt}])

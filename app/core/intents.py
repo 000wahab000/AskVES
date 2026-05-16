@@ -10,8 +10,9 @@ SYNONYM_MAP = None
 def init_synonyms():
     s_map = {
         "xerox": ["printer", "photocopy", "print", "printout"],
-        "food": ["canteen", "lunch", "breakfast", "snack", "eat", "hungry", "menu"],
+        "food": ["canteen", "lunch", "breakfast", "snack", "eat", "hungry", "menu", "bhook", ],
         "teacher": ["professor", "faculty", "timetable", "sir", "ma'am"],
+        "events": ["club", "activity", "extracuriculars"],
     }
     
     for code, details in db.timetable_data.get("teachers", {}).items():
@@ -19,7 +20,7 @@ def init_synonyms():
         subject = details.get("subject", "")
         
         clean_parts = [p.lower() for p in full_name.replace(".", "").split() if p.lower() not in ["mr", "ms", "mrs", "dr"]]
-        ignore_words = {"engineering", "fundamentals", "basic", "and", "of", "course", "universal", "human", "i", "ii"}
+        ignore_words = {"engineering", "fundamentals", "basic", "and", "of", "course", "universal", "human"}
         subject_parts = [s.lower().strip(',.') for s in subject.split() if s.lower().strip(',.') not in ignore_words and len(s) > 2]
         triggers = [code.lower()] + clean_parts + subject_parts
         expanded_info = [full_name, code, subject]
@@ -70,7 +71,8 @@ def ask(question):
     if any(w in q_lower for w in ['event', 'workshop', 'seminar', 'fest', 'competition', 'happening', 'week']):
         context_parts.append(f"EVENTS:{json.dumps(db.events_data, separators=(',',':'))}")
 
-    if db.community_data.get('facts'):
+    if any(w in q_lower for w in ["friend", "correction", "this is wrong"]):
+        db.community_data.get('facts')
         context_parts.append(f"COMMUNITY FACTS:{json.dumps(db.community_data['facts'], separators=(',',':'))}")
 
     if not context_parts:
