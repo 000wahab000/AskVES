@@ -164,14 +164,8 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(user or {}).encode())
 
-            auth_header = self.headers.get("Authorization")
-            if auth_header != f"Bearer {ADMIN_PASSWORD}":
-                self.send_response(401)
-                self.end_headers()
-                self.wfile.write(b"Unauthorized")
-                return
-
-            if self.path == '/api/admin/stats':
+    
+        elif self.path == '/api/admin/stats':
                 uptime = time.time() - server_start_time
                 avg_time = metrics["total_response_time"] / metrics["total_queries"] if metrics["total_queries"] > 0 else 0
                 stats = {
@@ -185,7 +179,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps(stats).encode())
                 
-            elif self.path.startswith('/api/admin/data?source='):
+        elif self.path.startswith('/api/admin/data?source='):
                 source = self.path.split('=')[-1]
                 allowed_sources = ['canteen', 'timetable', 'xerox', 'vending', 'events', 'community']
                 if source in allowed_sources:
@@ -202,13 +196,8 @@ class Handler(BaseHTTPRequestHandler):
                 else:
                     self.send_response(400)
                     self.end_headers()
-            else:
-                self.send_response(404)
-                self.end_headers()
-        else:
-            self.send_response(404)
-            self.end_headers()
-    
+        
+        
     def do_POST(self):
         if self.path == '/ask':
             try:
