@@ -9,7 +9,7 @@ try:
     supabase_url = os.environ.get("SUPABASE_URL")
     supabase_key = os.environ.get("SUPABASE_KEY")
     supabase = create_client(supabase_url, supabase_key) if supabase_url and supabase_key else None
-except ImportError:
+except Exception:
     supabase = None
 
 canteen_data = {}
