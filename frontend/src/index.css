@@ -28,3 +28,23 @@ html,body,#root {
   width:100%;
   min-height: 100vh;
 }
+
+.ai-badge {
+  display: inline-block;
+}
+
+.powered-by{
+  display: inline-block;
+}
+
+@media (max-width:900px) {
+  .powered-by {
+    display: none;
+  }
+}
+@media (max-width:900px) {
+  .ai-badge{
+    display: none;
+  }
+}
+
