@@ -24,17 +24,17 @@
 import { Link } from 'react-router-dom'
 
 const navLinks = [
-    { label: 'Chat', path: '/'},
-    { label: 'Community', path: '/community'},
-    { label: 'Notes', path: '/notes'},
-    { label: 'Campus', path: '/campus'},
-    { label: 'Placements', path: '/placements'},
+    { label: 'Chat', path: '/' },
+    { label: 'Community', path: '/community' },
+    { label: 'Notes', path: '/notes' },
+    { label: 'Campus', path: '/campus' },
+    { label: 'Placements', path: '/placements' },
 ]
 
 export default function Navbar() {
     return (
         <nav style={{
-            height:'56px',
+            height: '56px',
             backgroundColor: '#090f1c',
             borderBottom: '1px solid rgba(255,255,0.07)',
             display: 'flex',
@@ -42,7 +42,7 @@ export default function Navbar() {
             justifyContent: 'flex-start',
             padding: '0 24px'
         }}>
-            <div style={{display: 'flex', alignItems: 'center', gap: '18px',marginRight:'24px'}}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginRight: '24px' }}>
                 <span style={{
                     fontFamily: 'Space Grotesk',
                     fontWeight: 700,
@@ -63,60 +63,60 @@ export default function Navbar() {
                     whiteSpace: 'nowrap',
                     marginRight: '8px'
 
-        }}>
-          AI Campus Assistant
-        </span>
-      </div>
+                }}>
+                    AI Campus Assistant
+                </span>
+            </div>
 
-      <div style={{
-        display: 'flex' , 
-        alignItems: 'center', 
-        gap: '32px',
-        flexWrap:'nowrap'
-        
-        }}>
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '32px',
+                flexWrap: 'nowrap'
 
-        {navLinks.map(link => (
-            <Link
-            key={link.path}
-            to={link.path}
-            style={{
-                fontFamily:'DM Sans',
-                fontSize: '14px',
-                color: '#8fa3c0',
-                textDecoration: 'none',
-            }}
-            >
+            }}>
 
-                {link.label}
-            </Link>  
-        ))}
-      </div>
+                {navLinks.map(link => (
+                    <Link
+                        key={link.path}
+                        to={link.path}
+                        style={{
+                            fontFamily: 'DM Sans',
+                            fontSize: '14px',
+                            color: '#8fa3c0',
+                            textDecoration: 'none',
+                        }}
+                    >
 
-      <div style={{display: "block" , alignItems: 'center' , gap: '16px' , marginLeft:'auto'}}>
-        <span className='powered-by' style={{
-            fontFamily: 'DM Sans',
-            fontSize: '12px',
-            color: '#3b4755',
-            marginRight:'12px'
-        }}>
-            Powered by: Groq + Gemini
-        </span>
-        <button style={{
-            backgroundColor: 'transparent',
-            border:'1px solid rgba(255,255,0,0.5)',
-            borderRadius: '10px',
-            padding: '8px 16px',
-            color: '#ffffff',
-            fontFamily: 'DM Sans',
-            fontSize: '14px',
-            cursor: 'pointer',
-            transition:'0.2s ease'
-        }}>
-            Login
-        </button>
-      </div>
-    </nav>
+                        {link.label}
+                    </Link>
+                ))}
+            </div>
+
+            <div style={{ display: "block", alignItems: 'center', gap: '16px', marginLeft: 'auto' }}>
+                <span className='powered-by' style={{
+                    fontFamily: 'DM Sans',
+                    fontSize: '12px',
+                    color: '#3b4755',
+                    marginRight: '12px'
+                }}>
+                    Powered by: Groq + Gemini
+                </span>
+                <button style={{
+                    backgroundColor: 'transparent',
+                    border: '1px solid rgba(255,255,0,0.5)',
+                    borderRadius: '10px',
+                    padding: '8px 16px',
+                    color: '#ffffff',
+                    fontFamily: 'DM Sans',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: '0.2s ease'
+                }}>
+                    Login
+                </button>
+            </div>
+        </nav>
     )
 }
 

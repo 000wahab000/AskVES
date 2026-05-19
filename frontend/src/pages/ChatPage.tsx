@@ -1,38 +1,82 @@
-import Navbar from "../components/Navbar"
+import { Utensils, Calendar, Users, Printer, CupSoda } from 'lucide-react'
+import { TopNavbar }    from '../components/TopNavbar'
+import { MobileTabBar } from '../components/MobileTabBar'
+import { ChatWindow }   from '../components/ChatWindow'
+
+const FEATURES = [
+  { Icon: Utensils, label: 'Canteen',   desc: 'Menu & prices' },
+  { Icon: Users,    label: 'Teachers',  desc: 'Real-time location' },
+  { Icon: Calendar, label: 'Events',    desc: 'Campus activities' },
+  { Icon: Printer,  label: 'Xerox',     desc: 'Shop comparison' },
+  { Icon: CupSoda,  label: 'Vending',   desc: '24/7 availability' },
+  { Icon: Users,    label: 'Community', desc: 'Discussion board' },
+]
 
 export default function ChatPage() {
-    return (
-        <div>
-            <Navbar />
-            <main style={{padding: '32'}}>
-                <p style={{color: '#8fa3c0' , fontFamily: 'DM Sans'}}>
-                    Chat coming soon
-                </p>
-            </main>
-        </div>
-    )
-}
-/*
-export default function ChatPage() {
   return (
-    <div style={{ padding: '32px' }}>
-      <h1 style={{ 
-        fontFamily: 'Space Grotesk', 
-        fontWeight: 600, 
-        fontSize: '24px',
-        color: '#e8edf8',
-        marginBottom: '8px'
-      }}>
-        AskVES
-      </h1>
-      <p style={{ 
-        fontFamily: 'DM Sans', 
-        fontSize: '14px', 
-        color: '#8fa3c0' 
-      }}>
-        Unofficial AI assistant for VESIT students
-      </p>
+    <div className="page-shell">
+      <TopNavbar />
+
+      <div className="chat-layout">
+
+        {/* ── Left: info panel ── */}
+        <div className="info-panel">
+
+          {/* Main info card */}
+          <div className="card">
+            <h2 style={{ fontFamily: 'Space Grotesk', fontWeight: 600, fontSize: '22px', color: '#e8edf8', marginBottom: '12px' }}>
+              Unofficial AI Assistant for VESIT Students
+            </h2>
+
+            <div className="disclaimer-badge">
+              ⚠ Not affiliated with or endorsed by VESIT
+            </div>
+
+            <div className="divider" />
+
+            <h3 style={{ fontFamily: 'Space Grotesk', fontWeight: 500, fontSize: '15px', color: '#8fa3c0', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              What It Can Do
+            </h3>
+
+            <div className="feature-grid">
+              {FEATURES.map(({ Icon, label, desc }) => (
+                <div key={label} className="feature-card">
+                  <div style={{ color: '#c8390a', marginBottom: '8px' }}>
+                    <Icon size={18} strokeWidth={2} />
+                  </div>
+                  <div style={{ fontFamily: 'DM Sans', fontWeight: 500, fontSize: '14px', color: '#e8edf8', marginBottom: '3px' }}>
+                    {label}
+                  </div>
+                  <div style={{ fontFamily: 'DM Sans', fontSize: '12px', color: '#8fa3c0' }}>
+                    {desc}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer card */}
+          <div className="card" style={{ padding: '16px 20px' }}>
+            <div style={{ fontFamily: 'Space Grotesk', fontWeight: 500, fontSize: '14px', color: '#e8edf8', marginBottom: '4px' }}>
+              Powered by AI + Structured Data
+            </div>
+            <div style={{ fontFamily: 'DM Sans', fontSize: '12px', color: '#8fa3c0', marginBottom: '4px' }}>
+              Built with Groq, Gemini, Supabase &amp; Python
+            </div>
+            <div style={{ fontFamily: 'DM Sans', fontSize: '11px', color: '#4d6380' }}>
+              Built at UniMerge 2026
+            </div>
+          </div>
+        </div>
+
+        {/* ── Right: chat ── */}
+        <div className="chat-panel">
+          <ChatWindow />
+        </div>
+
+      </div>
+
+      <MobileTabBar />
     </div>
   )
 }
-  */
