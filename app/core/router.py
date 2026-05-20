@@ -36,16 +36,17 @@ ROOT_DIR = find_project_root()
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
-    
+
     def do_GET(self):
         if self.path == '/' or self.path == '/index.html':
             with open(ROOT_DIR / "index.html", "rb") as f:
                 content = f.read()
             self.send_response(200)
-            self.send_header("Content-Type", "text/html")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
             self.end_headers()
-            self.wfile.write(content)
-
+    
         elif self.path == '/health':
             health = {
                 "status": "ok",
@@ -208,6 +209,9 @@ class Handler(BaseHTTPRequestHandler):
                 answer = f"System Error: {str(e)}"
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
             self.end_headers()
             self.wfile.write(json.dumps({"answer": answer}).encode())
             
