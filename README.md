@@ -2,7 +2,7 @@
 
 > ⚠️ Unofficial student project. Not affiliated with or endorsed by VESIT.
 
-**Live Demo:** https://askves-production-185d.up.railway.app
+**Live Demo:** ( currently getting a UI overhaul )
 
 AskVES is a RAG-based campus chatbot that answers real-time questions about VESIT college using structured campus data and LLM reasoning.
 
