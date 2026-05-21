@@ -61,19 +61,19 @@ py main.py
 ###  Massive Data Expansion
 - [ ] **Demographics:** Total student counts across B.Tech, M.Tech, Management, Law, and other departments.
 - [ ] **Academics:** Detailed breakdown of all B.Tech fields and specializations.
-- [ ] **Placements:** Comprehensive placement statistics, salary packages, and top recruiting companies.
+- [x] **Placements:** Comprehensive placement statistics, salary packages, and top recruiting companies.
 - [ ] **Facilities:** Detailed information on all campus facilities.
 - [ ] **Administration & Faculty:** Teacher salaries, internal management structure, legal/business info, and "How to get a job here" guides.
 
 ### Advanced Bot Capabilities
-- [ ] **Voice Integration:** Add voice inputs and outputs to make the bot more accessible.
+- [x] **Voice Integration:** Add voice inputs and outputs to make the bot more accessible.
 - [ ] **Multilingual Support:** Support queries and responses in multiple regional languages.
 - [ ] **Improved Precision:** Fix vague responses by tightening RAG context and system prompts.
 
 ### Community & UI Improvements
 - [ ] **Dual Authentication System:** Differentiate between verified `@ves.ac.in` students (full access) and standard Gmail users (guest/read-only access).
-- [ ] **Notice Board UI:** Evolve the design into 2 main parts, incorporating a Live Notice Board alongside the chat interface.
-- [ ] **Notes Marketplace:** A dedicated section for seniors to share or sell study notes.
+- [x] **Notice Board UI:** Evolve the design into 2 main parts, incorporating a Live Notice Board alongside the chat interface.
+- [x] **Notes Marketplace:** A dedicated section for seniors to share or sell study notes.
 - [ ] **Visual Excellence Redesign:** Overhaul the interface with modern glassmorphism, dynamic micro-animations, and a curated premium dark-mode color palette.
 
 ## Built At
