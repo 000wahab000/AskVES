@@ -634,3 +634,88 @@ body {
 @media (min-width: 1024px) {
   .floating-action-btn { bottom: 32px; }
 }
+
+/* ── Notes Marketplace ── */
+.notes-icon-box {
+  width: 60px;
+  height: 80px;
+  background: #112038;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notes-subject {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--t1);
+  margin-bottom: 6px;
+}
+
+.notes-meta {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--t2);
+  margin-bottom: 8px;
+}
+
+.notes-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.notes-stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.notes-download-count {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--t2);
+  margin-left: 8px;
+}
+
+.notes-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.free-badge {
+  background: #0d2b1a;
+  color: #4ade80;
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+}
+
+.download-btn {
+  background: transparent;
+  border: 1px solid var(--border-hi);
+  color: var(--t1);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.download-btn:hover {
+  border-color: rgba(255,255,255,0.25);
+}
