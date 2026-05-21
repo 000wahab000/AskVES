@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 
 const NAV = [
   { label: 'Chat',       path: '/' },
-  { label: 'Community',  path: '/CommunityPage' },
+  { label: 'Community',  path: '/community' },
   { label: 'Notes',      path: '/notes' },
   { label: 'Campus',     path: '/campus' },
   { label: 'Placements', path: '/placements' },
