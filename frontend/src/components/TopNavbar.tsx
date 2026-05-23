@@ -6,6 +6,8 @@ const NAV = [
   { label: 'Notes',      path: '/notes' },
   { label: 'Campus',     path: '/campus' },
   { label: 'Placements', path: '/placements' },
+  { label: 'Teachers',   path: '/teachers' },
+  { label: 'Profile',    path: '/profile' },
 ]
 
 export function TopNavbar() {
