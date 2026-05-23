@@ -1,12 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
-import { MessageCircle, Users, BookOpen, Building2, Briefcase } from 'lucide-react'
+import { MessageCircle, Users, BookOpen, Building2, ClipboardList } from 'lucide-react'
 
 const TABS = [
   { label: 'Chat',       path: '/',           Icon: MessageCircle },
   { label: 'Community',  path: '/community',  Icon: Users },
   { label: 'Notes',      path: '/notes',      Icon: BookOpen },
   { label: 'Campus',     path: '/campus',     Icon: Building2 },
-  { label: 'Placements', path: '/placements', Icon: Briefcase },
+  { label: 'Attendance', path: '/attendance', Icon: ClipboardList },
 ]
 
 export function MobileTabBar() {
