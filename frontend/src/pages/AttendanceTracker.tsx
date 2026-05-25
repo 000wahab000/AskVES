@@ -1,123 +1,149 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { CheckCircle, XCircle, MinusCircle, AlertTriangle, BookOpen, TrendingUp, Calendar, RotateCcw } from "lucide-react";
 import { TopNavbar } from "../components/TopNavbar";
 import { MobileTabBar } from "../components/MobileTabBar";
+import timetableData from "../data/timetable.json";
 
-// ─── Timetable (synced data) ──────────────────────────────────────────────────
-// Mon=0 … Sat=5, Period 0-6
-// "—" = no class that period
-
-const SUBJECTS = ["DSA", "DBMS", "CN", "OS", "MP", "SE"];
-
-const TIMETABLE: string[][] = [
-  // Mon   P0      P1      P2      P3      P4      P5      P6
-  ["DSA", "DBMS", "—", "CN", "OS", "—", "Lab"],
-  // Tue
-  ["—", "CN", "CN", "DSA", "—", "DBMS", "Lab"],
-  // Wed
-  ["DBMS", "—", "DSA", "MP", "SE", "—", "—"],
-  // Thu
-  ["CN", "DBMS", "—", "—", "DSA", "SE", "Lab"],
-  // Fri
-  ["—", "—", "DBMS", "CN", "—", "DSA", "MP"],
-  // Sat
-  ["MP", "SE", "—", "OS", "—", "—", "—"],
-];
-
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const PERIOD_TIMES = [
-  "8:00–9:00",
-  "9:00–10:00",
-  "10:00–11:00",
-  "11:00–12:00",
-  "12:00–1:00",
-  "2:00–3:00",
-  "3:00–5:00",
-];
-
+// --- Types -------------------------------------------------------------------
 type Status = "present" | "absent" | "cancelled";
 
-// key format: "YYYY-MM-DD_dayIdx_periodIdx"
-function makeKey(date: string, dayIdx: number, periodIdx: number) {
-  return `att_${date}_${dayIdx}_${periodIdx}`;
+const DAYS_ORDER = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
+const DAY_LABELS  = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+// --- Parse a slot string -> subject label ------------------------------------
+// e.g. "EP-B1(MT)/BEE-B2(MJ)" -> "EP / BEE"
+// e.g. "FEM-II-TUT(RS/AD)"   -> "FEM-II-TUT"
+function parseSubjectCode(slot: string): string {
+  if (!slot) return "\u2014";
+  const parts = slot.split("/").map(p => {
+    const idx = p.indexOf("(");
+    const raw = idx > -1 ? p.slice(0, idx) : p;
+    return raw.replace(/-B(atch)?[12]$/i, "").trim();
+  });
+  const unique = [...new Set(parts.filter(Boolean))];
+  return unique.length ? unique.join(" / ") : "\u2014";
 }
 
-function todayString() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10); // YYYY-MM-DD
-}
+// --- Build schedule for a given class code -----------------------------------
+function buildClassTimetable(classCode: string) {
+  const tt   = (timetableData as any).timetable as Record<string, Record<string, Record<string, { room: string; slots: Record<string, string> }>>>;
+  const slotDefs = (timetableData as any).time_slots as { slot: number; start: string; end: string }[];
 
-function getTodayDayIdx() {
-  const d = new Date().getDay(); // 0=Sun
-  if (d === 0) return -1;        // Sunday – no classes
-  return d - 1;                  // Mon→0, Sat→5
-}
+  const periodTimes = slotDefs.map(s => `${s.start}\u2013${s.end}`);
+  const numSlots    = slotDefs.length; // 6
 
-// ─── Component ────────────────────────────────────────────────────────────────
-export function AttendanceTracker() {
-  const [attendance, setAttendance] = useState<Record<string, Status>>(() => {
-    try {
-      const raw = localStorage.getItem("askves_attendance");
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
+  // timetable[dayIdx][slotIdx] = subject string | "\u2014"
+  const timetable: string[][] = DAYS_ORDER.map(() => Array(numSlots).fill("\u2014"));
+
+  DAYS_ORDER.forEach((day, dayIdx) => {
+    const dayData = tt[day];
+    if (!dayData) return;
+    for (const group of Object.values(dayData)) {
+      if (group[classCode]) {
+        const divSlots = group[classCode].slots;
+        Object.entries(divSlots).forEach(([num, raw]) => {
+          const sIdx = parseInt(num) - 1;
+          if (sIdx >= 0 && sIdx < numSlots && raw) {
+            timetable[dayIdx][sIdx] = parseSubjectCode(raw);
+          }
+        });
+        break;
+      }
     }
   });
 
-  const [selectedDay, setSelectedDay] = useState<number>(() => {
-    const idx = getTodayDayIdx();
-    return idx >= 0 ? idx : 0;
+  // Collect unique subjects (split compound "A / B" into individual entries)
+  const subjectSet = new Set<string>();
+  timetable.forEach(day =>
+    day.forEach(cell => {
+      if (cell !== "\u2014") cell.split(" / ").forEach(s => subjectSet.add(s.trim()));
+    })
+  );
+
+  return { timetable, periodTimes, subjects: [...subjectSet].sort() };
+}
+
+// --- Attendance key ----------------------------------------------------------
+function makeKey(date: string, dayIdx: number, slotIdx: number) {
+  return `att_${date}_${dayIdx}_${slotIdx}`;
+}
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+function getTodayDayIdx() {
+  const d = new Date().getDay(); // 0 = Sun
+  if (d === 0 || d === 6) return -1; // weekend
+  return d - 1; // Mon=0...Fri=4
+}
+
+// --- Component ---------------------------------------------------------------
+export function AttendanceTracker() {
+  // -- user from login --------------------------------------------------------
+  const user = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem("askves_user") ?? "null"); }
+    catch { return null; }
+  }, []);
+
+  const classCode: string = user?.classCode ?? "";
+  const { timetable: TIMETABLE, periodTimes: PERIOD_TIMES, subjects: SUBJECTS } =
+    useMemo(() => buildClassTimetable(classCode), [classCode]);
+
+  // -- attendance state -------------------------------------------------------
+  const [attendance, setAttendance] = useState<Record<string, Status>>(() => {
+    try { return JSON.parse(localStorage.getItem("askves_attendance") ?? "{}"); }
+    catch { return {}; }
   });
 
-  const [activeTab, setActiveTab] = useState<"today" | "week" | "stats">("today");
-  const today = todayString();
+  const [activeTab, setActiveTab]     = useState<"today" | "week" | "stats">("today");
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const t = getTodayDayIdx(); return t >= 0 ? t : 0;
+  });
 
-  // Persist to localStorage whenever attendance changes
+  const today       = todayStr();
+  const todayDayIdx = getTodayDayIdx();
+
   useEffect(() => {
     localStorage.setItem("askves_attendance", JSON.stringify(attendance));
   }, [attendance]);
 
-  // ── mark a class ────────────────────────────────────────────────────────────
-  function mark(date: string, dayIdx: number, periodIdx: number, status: Status) {
-    const key = makeKey(date, dayIdx, periodIdx);
+  // -- mark -------------------------------------------------------------------
+  function mark(date: string, dayIdx: number, slotIdx: number, status: Status) {
+    const key = makeKey(date, dayIdx, slotIdx);
     setAttendance(prev => {
       const next = { ...prev };
-      if (next[key] === status) {
-        delete next[key]; // toggle off
-      } else {
-        next[key] = status;
-      }
+      if (next[key] === status) delete next[key]; else next[key] = status;
       return next;
     });
   }
 
-  function getStatus(date: string, dayIdx: number, periodIdx: number): Status | null {
-    return attendance[makeKey(date, dayIdx, periodIdx)] || null;
+  function getStatus(date: string, dayIdx: number, slotIdx: number): Status | null {
+    return attendance[makeKey(date, dayIdx, slotIdx)] ?? null;
   }
 
-  // ── per-subject stats ────────────────────────────────────────────────────────
+  // -- subject stats ----------------------------------------------------------
   function subjectStats(subject: string) {
-    let held = 0;
-    let present = 0;
+    let held = 0, present = 0;
     Object.entries(attendance).forEach(([key, status]) => {
-      // key: att_YYYY-MM-DD_dayIdx_periodIdx
       const parts = key.split("_");
       if (parts.length < 4) return;
       const dIdx = parseInt(parts[2]);
-      const pIdx = parseInt(parts[3]);
-      const cell = TIMETABLE[dIdx]?.[pIdx];
-      if (cell === subject || (subject === "Lab" && cell === "Lab")) {
-        if (status !== "cancelled") {
-          held++;
-          if (status === "present") present++;
-        }
+      const sIdx = parseInt(parts[3]);
+      const cell = TIMETABLE[dIdx]?.[sIdx] ?? "\u2014";
+      // cell may be "EP / BEE" - check if subject appears
+      if (cell !== "\u2014" && cell.split(" / ").map(s => s.trim()).includes(subject)) {
+        if (status !== "cancelled") { held++; if (status === "present") present++; }
       }
     });
     const pct = held > 0 ? Math.round((present / held) * 100) : null;
     return { held, present, absent: held - present, pct };
   }
 
-  // ── reset all ────────────────────────────────────────────────────────────────
+  function classesNeeded(subject: string) {
+    const { held, present } = subjectStats(subject);
+    const x = Math.ceil((0.75 * held - present) / 0.25);
+    return x > 0 ? x : 0;
+  }
+
   function resetAll() {
     if (window.confirm("Reset all attendance data? This cannot be undone.")) {
       setAttendance({});
@@ -125,210 +151,166 @@ export function AttendanceTracker() {
     }
   }
 
-  // ── helpers ──────────────────────────────────────────────────────────────────
+  // -- colour helpers ---------------------------------------------------------
   function pctColor(pct: number | null) {
-    if (pct === null) return "#4d6380";
-    if (pct >= 85) return "#4ade80";
-    if (pct >= 75) return "#fbbf24";
+    if (pct === null) return "#3d5a7a";
+    if (pct >= 85)   return "#4ade80";
+    if (pct >= 75)   return "#fbbf24";
     return "#f87171";
   }
-
   function pctBg(pct: number | null) {
     if (pct === null) return "rgba(255,255,255,0.04)";
-    if (pct >= 85) return "rgba(74,222,128,0.08)";
-    if (pct >= 75) return "rgba(251,191,36,0.08)";
+    if (pct >= 85)   return "rgba(74,222,128,0.08)";
+    if (pct >= 75)   return "rgba(251,191,36,0.08)";
     return "rgba(248,113,113,0.08)";
   }
-
   function pctBorder(pct: number | null) {
-    if (pct === null) return "rgba(255,255,255,0.07)";
-    if (pct >= 85) return "rgba(74,222,128,0.20)";
-    if (pct >= 75) return "rgba(251,191,36,0.20)";
+    if (pct === null) return "rgba(100,160,220,0.10)";
+    if (pct >= 85)   return "rgba(74,222,128,0.20)";
+    if (pct >= 75)   return "rgba(251,191,36,0.20)";
     return "rgba(248,113,113,0.20)";
   }
 
-  // How many more classes to attend to reach 75%
-  function classesNeeded(subject: string) {
-    const { held, present } = subjectStats(subject);
-    // We need present/(held+x) >= 0.75  →  x >= (0.75*held - present)/0.25
-    const x = Math.ceil((0.75 * held - present) / 0.25);
-    return x > 0 ? x : 0;
-  }
+  // -- overall stats ----------------------------------------------------------
+  const allStats    = SUBJECTS.map(s => ({ subject: s, ...subjectStats(s) }));
+  const totalHeld   = allStats.reduce((a, s) => a + s.held, 0);
+  const totalPresent= allStats.reduce((a, s) => a + s.present, 0);
+  const overallPct  = totalHeld > 0 ? Math.round((totalPresent / totalHeld) * 100) : null;
 
-  // ── today's timetable ────────────────────────────────────────────────────────
-  const todayDayIdx = getTodayDayIdx();
+  // -- no class found guard ---------------------------------------------------
+  const classNotFound = classCode && SUBJECTS.length === 0;
 
-  // ── StatusButton ─────────────────────────────────────────────────────────────
-  const StatusBtn = ({
-    label, icon: Icon, color, active, onClick
-  }: {
-    label: string;
-    icon: any;
-    color: string;
-    active: boolean;
-    onClick: () => void;
+  // -- StatusBtn --------------------------------------------------------------
+  const StatusBtn = ({ label, icon: Icon, color, active, onClick }: {
+    label: string; icon: any; color: string; active: boolean; onClick: () => void;
   }) => (
     <button
       onClick={onClick}
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "4px",
-        padding: "6px 12px",
-        borderRadius: "6px",
-        border: active ? `1px solid ${color}` : "1px solid rgba(255,255,255,0.10)",
+        display: "flex", alignItems: "center", gap: "4px",
+        padding: "6px 12px", borderRadius: "6px", cursor: "pointer",
+        border: active ? `1px solid ${color}` : "1px solid rgba(100,160,220,0.15)",
         backgroundColor: active ? `${color}22` : "transparent",
-        color: active ? color : "#4d6380",
-        fontFamily: "DM Sans",
-        fontSize: "12px",
-        fontWeight: 500,
-        cursor: "pointer",
-        transition: "all 0.15s"
+        color: active ? color : "#3d5a7a",
+        fontFamily: "DM Sans", fontSize: "12px", fontWeight: 500, transition: "all 0.15s",
       }}
     >
-      <Icon className="w-3 h-3" />
-      {label}
+      <Icon className="w-3 h-3" />{label}
     </button>
   );
 
-  // ── DayClassRow ───────────────────────────────────────────────────────────────
-  const DayClassRow = ({
-    subject, periodIdx, dayIdx, date
-  }: {
-    subject: string; periodIdx: number; dayIdx: number; date: string;
+  // -- DayClassRow ------------------------------------------------------------
+  const DayClassRow = ({ subject, slotIdx, dayIdx, date }: {
+    subject: string; slotIdx: number; dayIdx: number; date: string;
   }) => {
-    if (subject === "—") return null;
-    const status = getStatus(date, dayIdx, periodIdx);
-
+    if (subject === "\u2014") return null;
+    const status = getStatus(date, dayIdx, slotIdx);
     return (
-      <div
-        style={{
-          backgroundColor: "#0d1829",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: "10px",
-          padding: "14px 16px",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          flexWrap: "wrap"
-        }}
-      >
-        {/* Time */}
-        <div style={{ minWidth: "90px" }}>
-          <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#4d6380", marginBottom: "2px" }}>
-            Period {periodIdx + 1}
+      <div className="attendance-class-row" style={{
+        backgroundColor: "#0b1730", border: "1px solid rgba(100,160,220,0.10)",
+        borderRadius: "10px", padding: "14px 16px",
+      }}>
+        <div style={{ minWidth: "110px" }}>
+          <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#3d5a7a", marginBottom: "2px" }}>
+            Slot {slotIdx + 1}
           </p>
-          <p style={{ fontFamily: "DM Sans", fontSize: "12px", color: "#8fa3c0" }}>
-            {PERIOD_TIMES[periodIdx]}
+          <p style={{ fontFamily: "DM Sans", fontSize: "12px", color: "#7a9bbf" }}>
+            {PERIOD_TIMES[slotIdx]}
           </p>
         </div>
 
-        {/* Subject chip */}
-        <span
-          style={{
-            backgroundColor: subject === "Lab" ? "rgba(139,92,246,0.15)" : "rgba(200,57,10,0.12)",
-            color: subject === "Lab" ? "#a78bfa" : "#c8390a",
-            border: subject === "Lab" ? "1px solid rgba(139,92,246,0.25)" : "1px solid rgba(200,57,10,0.25)",
-            borderRadius: "6px",
-            padding: "4px 12px",
-            fontFamily: "Space Grotesk",
-            fontSize: "13px",
-            fontWeight: 600,
-            flex: 1
-          }}
-        >
+        <span style={{
+          backgroundColor: "rgba(26,127,168,0.12)", color: "#1a7fa8",
+          border: "1px solid rgba(26,127,168,0.25)", borderRadius: "6px",
+          padding: "4px 12px", fontFamily: "Space Grotesk", fontSize: "13px",
+          fontWeight: 600, flex: 1,
+        }}>
           {subject}
         </span>
 
-        {/* Buttons */}
-        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-          <StatusBtn
-            label="Present" icon={CheckCircle} color="#4ade80"
-            active={status === "present"}
-            onClick={() => mark(date, dayIdx, periodIdx, "present")}
-          />
-          <StatusBtn
-            label="Absent" icon={XCircle} color="#f87171"
-            active={status === "absent"}
-            onClick={() => mark(date, dayIdx, periodIdx, "absent")}
-          />
-          <StatusBtn
-            label="Cancelled" icon={MinusCircle} color="#fbbf24"
-            active={status === "cancelled"}
-            onClick={() => mark(date, dayIdx, periodIdx, "cancelled")}
-          />
+        <div className="attendance-status-buttons">
+          <StatusBtn label="Present"   icon={CheckCircle} color="#4ade80"  active={status === "present"}   onClick={() => mark(date, dayIdx, slotIdx, "present")} />
+          <StatusBtn label="Absent"    icon={XCircle}     color="#f87171"  active={status === "absent"}    onClick={() => mark(date, dayIdx, slotIdx, "absent")} />
+          <StatusBtn label="Cancelled" icon={MinusCircle} color="#fbbf24"  active={status === "cancelled"} onClick={() => mark(date, dayIdx, slotIdx, "cancelled")} />
         </div>
       </div>
     );
   };
 
-  // ── overall attendance ────────────────────────────────────────────────────────
-  const allStats = SUBJECTS.map(s => ({ subject: s, ...subjectStats(s) }));
-  const totalHeld = allStats.reduce((a, s) => a + s.held, 0);
-  const totalPresent = allStats.reduce((a, s) => a + s.present, 0);
-  const overallPct = totalHeld > 0 ? Math.round((totalPresent / totalHeld) * 100) : null;
-
-  // ─── RENDER ───────────────────────────────────────────────────────────────────
+  // --- RENDER ----------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-background text-foreground pb-16 md:pb-0">
+    <div className="page-wrapper">
       <TopNavbar />
 
-      <main className="mx-auto px-8 py-12" style={{ maxWidth: "1200px" }}>
+      <main className="page-content">
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
+        <div className="page-header">
           <div>
-            <h1 style={{ fontFamily: "Space Grotesk", fontWeight: 600, fontSize: "32px", color: "#e8edf8", marginBottom: "6px" }}>
-              Attendance Tracker
-            </h1>
-            <p style={{ fontFamily: "DM Sans", fontSize: "14px", color: "#8fa3c0" }}>
-              Synced to your timetable · {DAYS[todayDayIdx >= 0 ? todayDayIdx : 0]}, {today}
+            <h1 className="page-title">Attendance Tracker</h1>
+            <p className="page-subtitle">
+              {classCode
+                ? `Class ${classCode} \u00b7 ${user?.department ?? ""} ${user?.year ?? ""} \u00b7 synced from timetable`
+                : "Login to see your personalised timetable"}
             </p>
           </div>
-
           <button
             onClick={resetAll}
             style={{
               display: "flex", alignItems: "center", gap: "6px",
-              backgroundColor: "transparent",
-              border: "1px solid rgba(248,113,113,0.30)",
-              color: "#f87171",
-              borderRadius: "8px",
-              padding: "8px 16px",
-              fontFamily: "DM Sans",
-              fontSize: "13px",
-              cursor: "pointer"
+              backgroundColor: "transparent", border: "1px solid rgba(248,113,113,0.30)",
+              color: "#f87171", borderRadius: "8px", padding: "8px 16px",
+              fontFamily: "DM Sans", fontSize: "13px", cursor: "pointer",
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(248,113,113,0.08)"}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(248,113,113,0.08)"}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
           >
-            <RotateCcw className="w-4 h-4" />
-            Reset All
+            <RotateCcw className="w-4 h-4" /> Reset All
           </button>
         </div>
 
-        {/* Overall stat cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: "Overall", value: overallPct !== null ? `${overallPct}%` : "—", sub: "attendance", color: pctColor(overallPct) },
-            { label: "Classes Held", value: String(totalHeld), sub: "total tracked", color: "#e8edf8" },
-            { label: "Present", value: String(totalPresent), sub: "marked present", color: "#4ade80" },
-            { label: "Absent", value: String(totalHeld - totalPresent), sub: "missed", color: "#f87171" },
-          ].map((card) => (
-            <div
-              key={card.label}
-              style={{
-                backgroundColor: "#0d1829",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: "12px",
-                padding: "20px",
-                textAlign: "center"
-              }}
-            >
-              <p style={{ fontFamily: "Space Grotesk", fontWeight: 700, fontSize: "28px", color: card.color, marginBottom: "4px" }}>
-                {card.value}
+        {/* No class guard */}
+        {classNotFound && (
+          <div className="warning-banner" style={{ marginBottom: "32px" }}>
+            <AlertTriangle className="w-5 h-5" style={{ color: "#f87171", flexShrink: 0 }} />
+            <div>
+              <p style={{ fontFamily: "DM Sans", fontWeight: 600, fontSize: "14px", color: "#f87171", marginBottom: "4px" }}>
+                Class &quot;{classCode}&quot; not found in timetable
               </p>
-              <p style={{ fontFamily: "DM Sans", fontSize: "12px", color: "#4d6380", marginBottom: "2px" }}>{card.label}</p>
+              <p style={{ fontFamily: "DM Sans", fontSize: "13px", color: "#7a9bbf" }}>
+                Your class code may not be in the database yet. Contact admin or re-login with a valid class.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Subjects chip list */}
+        {SUBJECTS.length > 0 && (
+          <div className="filter-pill-row" style={{ marginBottom: "28px" }}>
+            {SUBJECTS.map(s => (
+              <span key={s} style={{
+                backgroundColor: "rgba(26,127,168,0.10)", color: "#1a7fa8",
+                border: "1px solid rgba(26,127,168,0.20)", borderRadius: "999px",
+                padding: "4px 12px", fontFamily: "Space Grotesk", fontSize: "12px", fontWeight: 500,
+              }}>{s}</span>
+            ))}
+          </div>
+        )}
+
+        {/* Overall stat cards */}
+        <div className="stat-cards-row">
+          {[
+            { label: "Overall",       value: overallPct !== null ? `${overallPct}%` : "\u2014", sub: "attendance",    color: pctColor(overallPct) },
+            { label: "Classes Held",  value: String(totalHeld),                                 sub: "total tracked", color: "#dce8f5"            },
+            { label: "Present",       value: String(totalPresent),                              sub: "marked present", color: "#4ade80"            },
+            { label: "Absent",        value: String(totalHeld - totalPresent),                  sub: "missed",         color: "#f87171"            },
+          ].map(card => (
+            <div key={card.label} style={{
+              backgroundColor: "#0b1730", border: "1px solid rgba(100,160,220,0.10)",
+              borderRadius: "12px", padding: "20px", textAlign: "center",
+            }}>
+              <p style={{ fontFamily: "Space Grotesk", fontWeight: 700, fontSize: "28px", color: card.color, marginBottom: "4px" }}>{card.value}</p>
+              <p style={{ fontFamily: "DM Sans", fontSize: "12px", color: "#3d5a7a", marginBottom: "2px" }}>{card.label}</p>
               <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#2d4060" }}>{card.sub}</p>
             </div>
           ))}
@@ -336,243 +318,155 @@ export function AttendanceTracker() {
 
         {/* Low attendance warning */}
         {allStats.some(s => s.pct !== null && s.pct < 75) && (
-          <div
-            className="mb-8 flex items-start gap-3"
-            style={{
-              backgroundColor: "rgba(248,113,113,0.08)",
-              border: "1px solid rgba(248,113,113,0.25)",
-              borderRadius: "10px",
-              padding: "14px 16px"
-            }}
-          >
-            <AlertTriangle className="w-5 h-5 flex-shrink-0" style={{ color: "#f87171", marginTop: "2px" }} />
+          <div className="warning-banner">
+            <AlertTriangle className="w-5 h-5" style={{ color: "#f87171", marginTop: "2px", flexShrink: 0 }} />
             <div>
               <p style={{ fontFamily: "DM Sans", fontWeight: 600, fontSize: "14px", color: "#f87171", marginBottom: "4px" }}>
                 Low Attendance Warning
               </p>
-              <p style={{ fontFamily: "DM Sans", fontSize: "13px", color: "#8fa3c0" }}>
-                {allStats.filter(s => s.pct !== null && s.pct < 75).map(s => {
-                  const need = classesNeeded(s.subject);
-                  return `${s.subject}: ${s.pct}% (attend ${need} more to reach 75%)`;
-                }).join(" · ")}
+              <p style={{ fontFamily: "DM Sans", fontSize: "13px", color: "#7a9bbf" }}>
+                {allStats.filter(s => s.pct !== null && s.pct < 75).map(s =>
+                  `${s.subject}: ${s.pct}% (attend ${classesNeeded(s.subject)} more)`
+                ).join(" \u00b7 ")}
               </p>
             </div>
           </div>
         )}
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          {(["today", "week", "stats"] as const).map((tab) => {
-            const isActive = activeTab === tab;
-            const labels: Record<string, string> = { today: "Today's Classes", week: "Weekly View", stats: "Subject Stats" };
-            const icons: Record<string, any> = { today: Calendar, week: TrendingUp, stats: BookOpen };
+        <div className="tab-strip">
+          {(["today", "week", "stats"] as const).map(tab => {
+            const active = activeTab === tab;
+            const labels = { today: "Today's Classes", week: "Weekly View", stats: "Subject Stats" };
+            const icons:  Record<string, any> = { today: Calendar, week: TrendingUp, stats: BookOpen };
             const Icon = icons[tab];
             return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  display: "flex", alignItems: "center", gap: "6px",
-                  backgroundColor: isActive ? "rgba(200,57,10,0.12)" : "transparent",
-                  color: isActive ? "#c8390a" : "#8fa3c0",
-                  border: isActive ? "1px solid rgba(200,57,10,0.30)" : "1px solid rgba(255,255,255,0.10)",
-                  borderRadius: "8px",
-                  padding: "10px 18px",
-                  fontFamily: "DM Sans",
-                  fontWeight: 500,
-                  fontSize: "14px",
-                  cursor: "pointer"
-                }}
-              >
-                <Icon className="w-4 h-4" />
-                {labels[tab]}
+              <button key={tab} onClick={() => setActiveTab(tab)} style={{
+                display: "flex", alignItems: "center", gap: "6px",
+                backgroundColor: active ? "rgba(26,127,168,0.15)" : "transparent",
+                color: active ? "#1a7fa8" : "#7a9bbf",
+                border: active ? "1px solid rgba(26,127,168,0.35)" : "1px solid rgba(100,160,220,0.15)",
+                borderRadius: "8px", padding: "10px 18px",
+                fontFamily: "DM Sans", fontWeight: 500, fontSize: "14px", cursor: "pointer",
+              }}>
+                <Icon className="w-4 h-4" />{labels[tab]}
               </button>
             );
           })}
         </div>
 
-        {/* ── TAB: TODAY ─────────────────────────────────────────────────────── */}
+        {/* -- TAB: TODAY -- */}
         {activeTab === "today" && (
           <div>
             {todayDayIdx < 0 ? (
-              <div style={{ textAlign: "center", padding: "60px 20px", color: "#8fa3c0", fontFamily: "DM Sans" }}>
-                🎉 It's Sunday — no classes today!
-              </div>
+              <div className="empty-state">\uD83C\uDF89 It&apos;s the weekend \u2014 no classes today!</div>
             ) : (
               <div>
-                <div className="flex items-center mb-4">
-                  <div style={{ width: "3px", height: "18px", backgroundColor: "#c8390a", marginRight: "10px" }} />
-                  <h2 style={{ fontFamily: "Space Grotesk", fontWeight: 500, fontSize: "18px", color: "#e8edf8" }}>
-                    {DAYS[todayDayIdx]} — {today}
-                  </h2>
+                <div className="section-heading-row">
+                  <div className="section-heading-bar" />
+                  <h2 className="section-heading-text">{DAY_LABELS[todayDayIdx]} \u00b7 {today}</h2>
                 </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {TIMETABLE[todayDayIdx].map((subject, pIdx) => (
-                    <DayClassRow
-                      key={pIdx}
-                      subject={subject}
-                      periodIdx={pIdx}
-                      dayIdx={todayDayIdx}
-                      date={today}
-                    />
+                <div className="card-list">
+                  {TIMETABLE[todayDayIdx].map((subject, sIdx) => (
+                    <DayClassRow key={sIdx} subject={subject} slotIdx={sIdx} dayIdx={todayDayIdx} date={today} />
                   ))}
                 </div>
-
-                {TIMETABLE[todayDayIdx].every(s => s === "—") && (
-                  <p style={{ fontFamily: "DM Sans", fontSize: "14px", color: "#8fa3c0", textAlign: "center", padding: "40px 0" }}>
-                    No classes scheduled for today.
-                  </p>
+                {TIMETABLE[todayDayIdx].every(s => s === "\u2014") && (
+                  <div className="empty-state">No classes scheduled for today.</div>
                 )}
               </div>
             )}
           </div>
         )}
 
-        {/* ── TAB: WEEK ──────────────────────────────────────────────────────── */}
+        {/* -- TAB: WEEK -- */}
         {activeTab === "week" && (
           <div>
-            {/* Day selector */}
-            <div className="flex gap-2 mb-6 flex-wrap">
-              {DAYS.map((day, dIdx) => {
+            <div className="filter-pill-row">
+              {DAY_LABELS.map((day, dIdx) => {
                 const isToday = dIdx === todayDayIdx;
-                const isSel = dIdx === selectedDay;
+                const isSel   = dIdx === selectedDay;
                 return (
-                  <button
-                    key={day}
-                    onClick={() => setSelectedDay(dIdx)}
-                    style={{
-                      backgroundColor: isSel ? "rgba(200,57,10,0.12)" : "transparent",
-                      color: isSel ? "#c8390a" : isToday ? "#e8edf8" : "#8fa3c0",
-                      border: isSel
-                        ? "1px solid rgba(200,57,10,0.30)"
-                        : isToday
-                          ? "1px solid rgba(255,255,255,0.25)"
-                          : "1px solid rgba(255,255,255,0.10)",
-                      borderRadius: "8px",
-                      padding: "8px 16px",
-                      fontFamily: "DM Sans",
-                      fontWeight: isToday ? 600 : 400,
-                      fontSize: "14px",
-                      cursor: "pointer"
-                    }}
-                  >
-                    {day.slice(0, 3)} {isToday && "·Today"}
+                  <button key={day} onClick={() => setSelectedDay(dIdx)} style={{
+                    backgroundColor: isSel ? "rgba(26,127,168,0.15)" : "transparent",
+                    color: isSel ? "#1a7fa8" : isToday ? "#dce8f5" : "#7a9bbf",
+                    border: isSel ? "1px solid rgba(26,127,168,0.35)"
+                          : isToday ? "1px solid rgba(100,160,220,0.30)"
+                          : "1px solid rgba(100,160,220,0.15)",
+                    borderRadius: "8px", padding: "8px 16px",
+                    fontFamily: "DM Sans", fontWeight: isToday ? 600 : 400,
+                    fontSize: "14px", cursor: "pointer",
+                  }}>
+                    {day.slice(0, 3)}{isToday && " \u00b7 Today"}
                   </button>
                 );
               })}
             </div>
 
-            {/* Note: for past/future days we use today's date as placeholder  */}
-            {/* In a real app you'd pick the actual date of that weekday       */}
-            <div className="flex items-center mb-4">
-              <div style={{ width: "3px", height: "18px", backgroundColor: "#c8390a", marginRight: "10px" }} />
-              <h2 style={{ fontFamily: "Space Grotesk", fontWeight: 500, fontSize: "18px", color: "#e8edf8" }}>
-                {DAYS[selectedDay]}
-              </h2>
+            <div className="section-heading-row">
+              <div className="section-heading-bar" />
+              <h2 className="section-heading-text">{DAY_LABELS[selectedDay]}</h2>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {TIMETABLE[selectedDay].map((subject, pIdx) => (
-                <DayClassRow
-                  key={pIdx}
-                  subject={subject}
-                  periodIdx={pIdx}
-                  dayIdx={selectedDay}
-                  date={today}
-                />
+            <div className="card-list">
+              {TIMETABLE[selectedDay].map((subject, sIdx) => (
+                <DayClassRow key={sIdx} subject={subject} slotIdx={sIdx} dayIdx={selectedDay} date={today} />
               ))}
             </div>
           </div>
         )}
 
-        {/* ── TAB: STATS ─────────────────────────────────────────────────────── */}
+        {/* -- TAB: STATS -- */}
         {activeTab === "stats" && (
-          <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {SUBJECTS.map((subject) => {
-                const { held, present, absent, pct } = subjectStats(subject);
-                const need = classesNeeded(subject);
-                const color = pctColor(pct);
-                const bg = pctBg(pct);
-                const border = pctBorder(pct);
-
-                return (
-                  <div
-                    key={subject}
-                    style={{
-                      backgroundColor: bg,
-                      border: `1px solid ${border}`,
-                      borderRadius: "12px",
-                      padding: "20px"
-                    }}
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p style={{ fontFamily: "Space Grotesk", fontWeight: 600, fontSize: "18px", color: "#e8edf8", marginBottom: "2px" }}>
-                          {subject}
-                        </p>
-                        <p style={{ fontFamily: "DM Sans", fontSize: "12px", color: "#4d6380" }}>
-                          {held} classes tracked
-                        </p>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <p style={{ fontFamily: "Space Grotesk", fontWeight: 700, fontSize: "28px", color }}>
-                          {pct !== null ? `${pct}%` : "—"}
-                        </p>
-                        {pct !== null && pct < 75 && (
-                          <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#f87171" }}>
-                            ↑ attend {need} more
-                          </p>
-                        )}
-                        {pct !== null && pct >= 75 && pct < 85 && (
-                          <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#fbbf24" }}>
-                            ⚠ borderline
-                          </p>
-                        )}
-                        {pct !== null && pct >= 85 && (
-                          <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#4ade80" }}>
-                            ✓ safe
-                          </p>
-                        )}
-                      </div>
+          <div className="two-col-grid">
+            {SUBJECTS.map(subject => {
+              const { held, present, absent, pct } = subjectStats(subject);
+              const need   = classesNeeded(subject);
+              const color  = pctColor(pct);
+              return (
+                <div key={subject} style={{
+                  backgroundColor: pctBg(pct), border: `1px solid ${pctBorder(pct)}`,
+                  borderRadius: "12px", padding: "20px",
+                }}>
+                  <div className="page-header" style={{ marginBottom: "16px" }}>
+                    <div>
+                      <p style={{ fontFamily: "Space Grotesk", fontWeight: 600, fontSize: "18px", color: "#dce8f5", marginBottom: "2px" }}>{subject}</p>
+                      <p style={{ fontFamily: "DM Sans", fontSize: "12px", color: "#3d5a7a" }}>{held} classes tracked</p>
                     </div>
-
-                    {/* Progress bar */}
-                    <div style={{ height: "6px", backgroundColor: "#112038", borderRadius: "4px", overflow: "hidden", marginBottom: "12px" }}>
-                      <div
-                        style={{
-                          height: "100%",
-                          width: pct !== null ? `${pct}%` : "0%",
-                          backgroundColor: color,
-                          borderRadius: "4px",
-                          transition: "width 0.4s ease"
-                        }}
-                      />
-                    </div>
-
-                    {/* Mini stats */}
-                    <div className="flex gap-4">
-                      <div>
-                        <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#4d6380" }}>Present</p>
-                        <p style={{ fontFamily: "Space Grotesk", fontWeight: 600, fontSize: "16px", color: "#4ade80" }}>{present}</p>
-                      </div>
-                      <div>
-                        <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#4d6380" }}>Absent</p>
-                        <p style={{ fontFamily: "Space Grotesk", fontWeight: 600, fontSize: "16px", color: "#f87171" }}>{absent}</p>
-                      </div>
-                      <div>
-                        <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#4d6380" }}>75% target</p>
-                        <p style={{ fontFamily: "Space Grotesk", fontWeight: 600, fontSize: "16px", color: "#e8edf8" }}>
-                          {held > 0 ? `${Math.ceil(held * 0.75)}` : "—"}
-                        </p>
-                      </div>
+                    <div style={{ textAlign: "right" }}>
+                      <p style={{ fontFamily: "Space Grotesk", fontWeight: 700, fontSize: "28px", color }}>{pct !== null ? `${pct}%` : "\u2014"}</p>
+                      {pct !== null && pct < 75  && <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#f87171" }}>&rarr; attend {need} more</p>}
+                      {pct !== null && pct >= 75 && pct < 85 && <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#fbbf24" }}>&#9888; borderline</p>}
+                      {pct !== null && pct >= 85 && <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#4ade80" }}>&#10003; safe</p>}
                     </div>
                   </div>
-                );
-              })}
-            </div>
+
+                  <div style={{ height: "6px", backgroundColor: "#0b1e38", borderRadius: "4px", overflow: "hidden", marginBottom: "12px" }}>
+                    <div style={{ height: "100%", width: pct !== null ? `${pct}%` : "0%", backgroundColor: color, borderRadius: "4px", transition: "width 0.4s ease" }} />
+                  </div>
+
+                  <div className="mini-stats-row">
+                    <div>
+                      <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#3d5a7a" }}>Present</p>
+                      <p style={{ fontFamily: "Space Grotesk", fontWeight: 600, fontSize: "16px", color: "#4ade80" }}>{present}</p>
+                    </div>
+                    <div>
+                      <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#3d5a7a" }}>Absent</p>
+                      <p style={{ fontFamily: "Space Grotesk", fontWeight: 600, fontSize: "16px", color: "#f87171" }}>{absent}</p>
+                    </div>
+                    <div>
+                      <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#3d5a7a" }}>75% target</p>
+                      <p style={{ fontFamily: "Space Grotesk", fontWeight: 600, fontSize: "16px", color: "#dce8f5" }}>{held > 0 ? Math.ceil(held * 0.75) : "\u2014"}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {SUBJECTS.length === 0 && (
+              <div className="empty-state" style={{ gridColumn: "1 / -1" }}>
+                {classCode ? `No subjects found for class "${classCode}".` : "Please log in to see your subjects."}
+              </div>
+            )}
           </div>
         )}
 

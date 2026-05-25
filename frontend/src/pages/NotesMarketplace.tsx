@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Search, FileText, Star, Upload, Download, X } from "lucide-react";
 import { TopNavbar } from "../components/TopNavbar";
 import { MobileTabBar } from "../components/MobileTabBar";
@@ -51,7 +51,7 @@ export function NotesMarketplace() {
         {/* Note info in the middle */}
         <div style={{ flex: 1 }}>
           <h3 className="notes-subject">{note.subject}</h3>
-          <p className="notes-meta">{note.uploader} · Sem {note.semester} · {note.branch}</p>
+          <p className="notes-meta">{note.uploader} Â· Sem {note.semester} Â· {note.branch}</p>
           <div className="notes-tags">
             <span className="category-tag">Sem {note.semester}</span>
             <span className="category-tag">{note.branch}</span>

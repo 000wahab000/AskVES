@@ -1,4 +1,4 @@
-import { TopNavbar } from '../components/TopNavbar'
+﻿import { TopNavbar } from '../components/TopNavbar'
 import { MobileTabBar } from '../components/MobileTabBar'
 import { useState } from 'react'
 import { ArrowUp, MessageSquare, Flag, Plus, UserCircle, CheckCircle } from 'lucide-react'
@@ -34,7 +34,7 @@ export default function CommunityPage() {
       isVerified: false,
       category: "Confessions",
       timestamp: "4h ago",
-      content: "I've been procrastinating on my final year project for 2 months now. The deadline is in 3 weeks and I haven't even started the coding part yet 😰",
+      content: "I've been procrastinating on my final year project for 2 months now. The deadline is in 3 weeks and I haven't even started the coding part yet ðŸ˜°",
       upvotes: 156,
       comments: 42,
       type: "text",
@@ -48,7 +48,7 @@ export default function CommunityPage() {
       isVerified: true,
       category: "Placements",
       timestamp: "1d ago",
-      content: "Got placed at Microsoft! AMA about the interview process 🎉",
+      content: "Got placed at Microsoft! AMA about the interview process ðŸŽ‰",
       upvotes: 287,
       comments: 63,
       type: "text",
@@ -80,7 +80,7 @@ export default function CommunityPage() {
       isVerified: true,
       category: "Hostel",
       timestamp: "5h ago",
-      content: "Hostel mess food quality has improved significantly this semester! Kudos to the management 👏",
+      content: "Hostel mess food quality has improved significantly this semester! Kudos to the management ðŸ‘",
       upvotes: 89,
       comments: 21,
       type: "text",
@@ -293,6 +293,7 @@ export default function CommunityPage() {
     </div>
   );
 }
+
 
 
 

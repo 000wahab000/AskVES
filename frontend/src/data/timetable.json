@@ -1,0 +1,144 @@
+{
+  "teachers": {
+    "VU": {"name": "Mr. Vivek Umrikar", "subject": "Engineering Mechanics, Engineering Drawing", "dept": "H & AS"},
+    "SBS": {"name": "Mr. Subhash B Singh", "subject": "Engineering Mechanics, Engineering Drawing", "dept": "H & AS"},
+    "RS": {"name": "Dr. Ravi Shankar", "subject": "Fundamentals of Engineering Mathematics", "dept": "H & AS"},
+    "SRM": {"name": "Dr. Shashwati Roy Majumder", "subject": "Engineering Physics", "dept": "H & AS"},
+    "MB": {"name": "Dr. Maya Bhat", "subject": "Engineering Chemistry", "dept": "H & AS"},
+    "NM": {"name": "Mrs. Netto Martin", "subject": "Fundamentals of Engineering Mathematics", "dept": "H & AS"},
+    "KD": {"name": "Dr. Keya Doshi", "subject": "Fundamentals of Engineering Mathematics", "dept": "H & AS"},
+    "SUM": {"name": "Dr. Sunanda Manoj", "subject": "Engineering Chemistry", "dept": "H & AS"},
+    "MT": {"name": "Dr. Manisha Tiwary", "subject": "Engineering Physics", "dept": "H & AS"},
+    "MS": {"name": "Mr. Mahesh Singh", "subject": "Engineering Mechanics, Engineering Drawing", "dept": "H & AS"},
+    "VS": {"name": "Mr. Vijay S", "subject": "Engineering Mechanics, Engineering Drawing", "dept": "H & AS"},
+    "PB": {"name": "Dr. Payel B.", "subject": "Engineering Chemistry", "dept": "H & AS"},
+    "AD": {"name": "Ms. Aparna Deshpande", "subject": "Fundamentals of Engineering Mathematics", "dept": "H & AS"},
+    "DG": {"name": "Mr. Dattatray Game", "subject": "Fundamentals of Engineering Mathematics", "dept": "H & AS"},
+    "ASW": {"name": "Dr. Ashwini Sawant", "subject": "Basic Electrical and Electronics Engineering", "dept": "EXTC"},
+    "MK": {"name": "Ms. Madhumati Khuspe", "subject": "Basic Electrical and Electronics Engineering", "dept": "AU&RO"},
+    "HP": {"name": "Ms. Himali Patel", "subject": "Basic Electrical and Electronics Engineering", "dept": "EXTC"},
+    "SHK": {"name": "Dr. Shobhit Khandare", "subject": "Basic Electrical and Electronics Engineering", "dept": "EXTC"},
+    "MJ": {"name": "Ms. Mugdha J.", "subject": "Basic Electrical and Electronics Engineering", "dept": "EXTC"},
+    "IB": {"name": "Ms. Indira Bhattacharya", "subject": "Fundamentals of Programming", "dept": "MCA"},
+    "RR": {"name": "Ms. Ruchi R.", "subject": "Fundamentals of Programming", "dept": "MCA"},
+    "SN": {"name": "Mr. Sunny Nahar", "subject": "Fundamentals of Programming", "dept": "MCA"},
+    "VG": {"name": "Ms. Vaishali G.", "subject": "Fundamentals of Programming", "dept": "MCA"},
+    "MM": {"name": "Ms. Manisha Mathur", "subject": "Fundamentals of Programming", "dept": "CMPN"},
+    "HPL": {"name": "Ms. Himali Patil", "subject": "Fundamentals of Programming", "dept": "CMPN"},
+    "PAG": {"name": "Ms. Pallavi G.", "subject": "Fundamentals of Programming", "dept": "CMPN"},
+    "SM": {"name": "Mr. Sanjay Mirchandani", "subject": "Programme Core Course", "dept": "EXTC"},
+    "DIK": {"name": "Ms. Dipti Karani", "subject": "Programme Core Course", "dept": "INFT"},
+    "PRN": {"name": "Ms. Priyanka Shah", "subject": "Programme Core Course", "dept": "ECS"},
+    "RJ": {"name": "Ms. Rakhi J", "subject": "Basic Electrical and Electronics Engineering", "dept": "EXTC"},
+    "AMS": {"name": "Ms. Amudha Senthil", "subject": "Universal Human Values", "dept": "H & AS"},
+    "SSP": {"name": "Ms. Sneha Sapre", "subject": "UHV / PCB", "dept": "ECS"},
+    "AW": {"name": "Ms. Aarti Wadhvani", "subject": "UHV / PCB", "dept": "EXTC"},
+    "ABH": {"name": "Mr. Abhishek", "subject": "Hardware & Networking", "dept": "AIDS"},
+    "VI": {"name": "Mr. Vikrant", "subject": "Hardware & Networking", "dept": "CMPN"},
+    "PK": {"name": "Dr. Pooja Kundu", "subject": "PCE-I", "dept": "H & AS"},
+    "SD": {"name": "Dr. Sushil D", "subject": "PCE-I", "dept": "H & AS"},
+    "DS": {"name": "Mr. Dinesh Shinde", "subject": "PCE-I", "dept": "H & AS"},
+    "SI": {"name": "Mr. Shivaji Ingole", "subject": "PCE-I", "dept": "H & AS"},
+    "RG": {"name": "Ms. Rujuta G.", "subject": "Engineering Physics", "dept": "H & AS"}
+  },
+  "time_slots": [
+    {"slot": 1, "start": "08:30", "end": "09:30"},
+    {"slot": 2, "start": "09:30", "end": "10:30"},
+    {"slot": 3, "start": "10:30", "end": "11:30"},
+    {"slot": 4, "start": "11:30", "end": "12:30"},
+    {"slot": 5, "start": "13:30", "end": "14:30"},
+    {"slot": 6, "start": "14:30", "end": "15:30"}
+  ],
+  "timetable": {
+    "MONDAY": {
+      "GROUP_A": {
+        "D2A": {"room": "517", "slots": {"1": "UHV(AD)", "2": "PCE-1(PK)", "3": "EC-Batch1(SUM)/FOP-Batch2(MM)", "4": "PCE-1(SD)", "5": "EC(SUM)", "6": ""}},
+        "D2B": {"room": "518", "slots": {"1": "EC-Batch1(MB)/FOP-Batch2(RR)", "2": "BIE(SRM)", "3": "FEM-II(RS)", "4": "FOP(VG)", "5": "PCC(SM)", "6": ""}},
+        "D2C": {"room": "519", "slots": {"1": "BWS-B1/PCB-B2(AMS)", "2": "PCC(RJ)", "3": "EC(PB)", "4": "FOP(HPL)", "5": "", "6": ""}},
+        "D5A": {"room": "520", "slots": {"1": "PCC(RJ)", "2": "BIE(RG)", "3": "PCE-1(SI)", "4": "FEM-II-TUT(RS/AD)", "5": "BWS-B1/PCB-B2(AW)", "6": ""}},
+        "D5B": {"room": "521", "slots": {"1": "FOP(IB)", "2": "", "3": "BIE(MT)", "4": "", "5": "EC-Batch1(MB)/FOP-Batch2(IB)", "6": ""}},
+        "D5C": {"room": "522", "slots": {"1": "PCC(DIK)", "2": "", "3": "BWS-B1/PCB-B2(SSP)", "4": "", "5": "FEM-II(KD)", "6": ""}}
+      },
+      "GROUP_B": {
+        "D1ADA": {"room": "517", "slots": {"1": "EP-B1(MT)/BEE-B2(MJ)", "2": "BEE(HP)", "3": "EM(VS)", "4": "PCE-1(SI)", "5": "", "6": ""}},
+        "D1ADB": {"room": "518", "slots": {"1": "FEM-II(DG)", "2": "FEM-II-TUT(NM/RS)", "3": "CAD-B1(MS)/PCE-1-B2(PK)", "4": "BEE(SHK)", "5": "", "6": ""}},
+        "D1EC": {"room": "522", "slots": {"1": "", "2": "FEM-II(KD)", "3": "ED(SBS)", "4": "", "5": "EP-B1(RG)/BEE-B2(HP)", "6": ""}},
+        "D3": {"room": "519", "slots": {"1": "CAD-B1(VS)/PCE-1-B2(DS)", "2": "", "3": "EP-B1(SRM)/BEE-B2(MK)", "4": "", "5": "BEE(MK)", "6": ""}},
+        "D4A": {"room": "B22", "slots": {"1": "BEE(MK)", "2": "", "3": "FEM-II-TUT(AD/KD)", "4": "", "5": "PCE-1(SD)", "6": ""}},
+        "D4B": {"room": "523", "slots": {"1": "EM(MS)", "2": "", "3": "BEE(ASW)", "4": "", "5": "CAD-B1(VS)/PCE-1-B2(DS)", "6": ""}}
+      }
+    },
+    "TUESDAY": {
+      "GROUP_A": {
+        "D2A": {"room": "517", "slots": {"1": "PCC(PAG)", "2": "FEM-II(AD)", "3": "FOP(MM)", "4": "BIE(SUM)", "5": "BWS-B1/PCB-B2(AW)", "6": ""}},
+        "D2B": {"room": "518", "slots": {"1": "UHV(SSP)", "2": "BIE(MB)", "3": "FOP(RR)", "4": "EC(MB)", "5": "", "6": "UHV(SSP)"}},
+        "D2C": {"room": "519", "slots": {"1": "PCC(PRN)", "2": "PCE-1(DS)", "3": "EC(PB)", "4": "BIE(PB)", "5": "UHV(SSP)", "6": "PCC(PRN)"}},
+        "D5A": {"room": "520", "slots": {"1": "EC-B1(SUM)/FOP-B2(HPL)", "2": "EC(PB)", "3": "UHV(DG)", "4": "FOP(HPL)", "5": "FEM-II-TUT(DG/KD)", "6": ""}},
+        "D5B": {"room": "521", "slots": {"1": "BWS-B1/PCB-B2(AW)", "2": "", "3": "EC(MB)", "4": "UHV(AD)", "5": "", "6": ""}},
+        "D5C": {"room": "522", "slots": {"1": "PCC(DIK)", "2": "", "3": "FOP-B1(SN)/PCE-I-B2(SD)", "4": "", "5": "EC-B1(PB)/FOP-B2(SN)", "6": ""}}
+      },
+      "GROUP_B": {
+        "D1ADA": {"room": "520", "slots": {"1": "BEE(MJ)", "2": "EP(MT)", "3": "CAD-B1(VS)/PCE-1-B1(SI)", "4": "PCE-1(PK)", "5": "", "6": ""}},
+        "D1ADB": {"room": "523", "slots": {"1": "FEM-II-TUT(DG/RS)", "2": "UHV(DG)", "3": "EM(VU)", "4": "EP(SRM)", "5": "EP-B2(RG)/BEE-B1(HP)", "6": ""}},
+        "D1EC": {"room": "522", "slots": {"1": "EP-B1(SRM)/BEE-B2(MK)", "2": "EM(VU)", "3": "BEE(MK)", "4": "UHV(AMS)", "5": "CAD-B1(VS)/PCE-1-B1(DS)", "6": ""}},
+        "D3": {"room": "524", "slots": {"1": "CAD-B1(MS)/PCE-1-B2(SD)", "2": "FEM-II(KD)", "3": "EM(SBS)", "4": "", "5": "", "6": ""}},
+        "D4A": {"room": "521", "slots": {"1": "FEM-II(AD)", "2": "", "3": "EP-B1(MT)/BEE-B2(SHK)", "4": "", "5": "EM(VU)", "6": ""}},
+        "D4B": {"room": "B22", "slots": {"1": "EP(RG)", "2": "", "3": "ED(MS)", "4": "", "5": "", "6": ""}}
+      }
+    },
+    "WEDNESDAY": {
+      "GROUP_A": {
+        "D2A": {"room": "517", "slots": {"1": "UHV(AD)", "2": "FEM-II-TUT(AD/KD)", "3": "BWS-B1/HW-B2(VI)", "4": "EC(MB)", "5": "EC(SUM)", "6": ""}},
+        "D2B": {"room": "518", "slots": {"1": "BWS-B1/PCB-B2(SSP)", "2": "FEM-II(DG)", "3": "PCC(SM)", "4": "FOP(VG)", "5": "EC-B2(MB)/PCE-I-B1(SD)", "6": ""}},
+        "D2C": {"room": "519", "slots": {"1": "FOP-B1(VG)/PCE-I-B2(DS)", "2": "PCE-1(SD)", "3": "FEM-II(NM)", "4": "FOP(IB)", "5": "BWS-B1/HW-B2(ABH)", "6": ""}},
+        "D5A": {"room": "520", "slots": {"1": "EC(SUM)", "2": "", "3": "FOP-B1(HPL)/PCE-I-B2(SI)", "4": "EC(PB)", "5": "", "6": ""}},
+        "D5B": {"room": "517", "slots": {"1": "EC-B2(MB)/PCE-I-B1(PK)", "2": "", "3": "FEM-II(RS)", "4": "FEM-II(RS)", "5": "PCC(RJ)", "6": ""}},
+        "D5C": {"room": "521", "slots": {"1": "UHV(AW)", "2": "", "3": "FOP(SN)", "4": "", "5": "", "6": ""}}
+      },
+      "GROUP_B": {
+        "D1ADA": {"room": "522", "slots": {"1": "FEM-II(KD)", "2": "BEE(MJ)", "3": "ED(VS)", "4": "BEE(HP)", "5": "UHV(SSP)", "6": ""}},
+        "D1ADB": {"room": "523", "slots": {"1": "FEM-II(DG)", "2": "EP(RG)", "3": "EM(VU)", "4": "UHV(DG)", "5": "EM(VU)", "6": ""}},
+        "D1EC": {"room": "524", "slots": {"1": "EP(SRM)", "2": "FEM-II(RS)", "3": "BEE(MK)", "4": "FEM-II(NM)", "5": "", "6": ""}},
+        "D3": {"room": "B22", "slots": {"1": "ED(SBS)", "2": "EP(SRM)", "3": "", "4": "", "5": "UHV(AMS)", "6": ""}},
+        "D4A": {"room": "520", "slots": {"1": "EP-B2(MT)/BEE-B1(SHK)", "2": "PCE-1(DS)", "3": "PCE-1(DS)", "4": "FEM-II(AD)", "5": "BEE(SHK)", "6": ""}},
+        "D4B": {"room": "", "slots": {"1": "CAD-B1(MS)/PCE-1-B2(SI)", "2": "EP-B2(RG)/BEE-B1(ASW)", "3": "", "4": "", "5": "", "6": ""}}
+      }
+    },
+    "THURSDAY": {
+      "GROUP_A": {
+        "D2A": {"room": "517", "slots": {"1": "EC-B2(SUM)/PCE-I-B1(PK)", "2": "FEM-II(NM)", "3": "FOP(MM)", "4": "PCC(PAG)", "5": "BIE(SUM)", "6": ""}},
+        "D2B": {"room": "518", "slots": {"1": "BWS-B1/HW-B2(ABH)", "2": "UHV(DG)", "3": "FOP(RR)", "4": "FEM-II(RS)", "5": "", "6": ""}},
+        "D2C": {"room": "518", "slots": {"1": "FOP(VG)", "2": "FEM-II(RS)", "3": "EC-B1(PB)/FOP-B2(VG)", "4": "EC(SUM)", "5": "UHV(SSP)", "6": "PCC(PRN)"}},
+        "D5A": {"room": "519", "slots": {"1": "PCC(RJ)", "2": "FEM-II(KD)", "3": "BIE(SRM)", "4": "BIE(MT)", "5": "", "6": ""}},
+        "D5B": {"room": "520", "slots": {"1": "FOP(IB)", "2": "", "3": "PCE-1(PK)", "4": "", "5": "FOP-B1(IB)/PCE-I-B2(PK)", "6": ""}},
+        "D5C": {"room": "517", "slots": {"1": "FOP(SN)", "2": "", "3": "BWS-B1/HW-B2(VI)", "4": "", "5": "EC-B2(PB)/PCE-I-B1(SD)", "6": ""}}
+      },
+      "GROUP_B": {
+        "D1ADA": {"room": "521", "slots": {"1": "EP(MT)", "2": "UHV(SSP)", "3": "FEM-II-TUT(KD/DG)", "4": "BEE(MJ)", "5": "CAD-B1(VS)/PCE-1-B2(SI)", "6": ""}},
+        "D1ADB": {"room": "B22", "slots": {"1": "ED(VU)", "2": "EP(MT)", "3": "FEM-II(RS)", "4": "UHV(DG)", "5": "", "6": ""}},
+        "D1EC": {"room": "522", "slots": {"1": "EP-B2(SRM)/BEE-B1(MK)", "2": "EP(RG)", "3": "FEM-II(NM)", "4": "EM(SBS)", "5": "", "6": ""}},
+        "D3": {"room": "523", "slots": {"1": "CAD-B1(MS)/PCE-1-B1(SD)", "2": "", "3": "CAD-B2(VS)/PCE-1-B1(DS)", "4": "BEE(MK)", "5": "EM(SBS)", "6": ""}},
+        "D4A": {"room": "522", "slots": {"1": "UHV(AD)", "2": "", "3": "EM(MS)", "4": "", "5": "BEE(SHK)", "6": ""}},
+        "D4B": {"room": "524", "slots": {"1": "PCE-1(SI)", "2": "", "3": "", "4": "BEE(ASW)", "5": "EP-B1(RG)/BEE-B2(ASW)", "6": "EM(VU)"}}
+      }
+    },
+    "FRIDAY": {
+      "GROUP_A": {
+        "D2A": {"room": "524", "slots": {"1": "FOP(MM)", "2": "FEM-II(AD)", "3": "FOP-B1(MM)/PCE-I-B2(PK)", "4": "BIE(MB)", "5": "", "6": ""}},
+        "D2B": {"room": "517", "slots": {"1": "FOP-B1(RR)/PCE-I-B2(SD)", "2": "BIE(PB)", "3": "FOP(RR)", "4": "FEM-II(DG)", "5": "FEM-II-TUT(RS/NM)", "6": "UHV(SSP)"}},
+        "D2C": {"room": "518", "slots": {"1": "FEM-II-TUT(NM/RS)", "2": "EC(MB)", "3": "EC-B2(PB)/PCE-I-B1(DS)", "4": "UHV(AW)", "5": "", "6": ""}},
+        "D5A": {"room": "518", "slots": {"1": "EC-B2(SUM)/PCE-I-B1(SI)", "2": "FEM-II-TUT(KD/DG)", "3": "FOP(HPL)", "4": "", "5": "BWS-B1/HW-B2(VI)", "6": ""}},
+        "D5B": {"room": "519", "slots": {"1": "UHV(AD)", "2": "", "3": "BWS-B1/HW-B2(ABH)", "4": "", "5": "", "6": ""}},
+        "D5C": {"room": "520", "slots": {"1": "FOP(SN)", "2": "", "3": "BIE(RG)", "4": "", "5": "", "6": ""}}
+      },
+      "GROUP_B": {
+        "D1ADA": {"room": "521", "slots": {"1": "FEM-II(KD)", "2": "EM(VS)", "3": "EP-B2(MT)/BEE-B1(MJ)", "4": "EP(RG)", "5": "", "6": ""}},
+        "D1ADB": {"room": "519", "slots": {"1": "CAD-B2(MS)/PCE-1-B1(PK)", "2": "UHV(DG)", "3": "BEE(HP)", "4": "FEM-II-TUT(RS/NM)", "5": "", "6": ""}},
+        "D1EC": {"room": "522", "slots": {"1": "PCE-1(DS)", "2": "ED(VU)", "3": "EM(SBS)", "4": "BEE(MK)", "5": "", "6": ""}},
+        "D3": {"room": "521", "slots": {"1": "EP-B2(SRM)/BEE-B1(MK)", "2": "", "3": "EP(SRM)", "4": "UHV(AD)", "5": "", "6": ""}},
+        "D4A": {"room": "B22", "slots": {"1": "EP(MT)", "2": "BEE(ASW)", "3": "FEM-II-TUT(KD/AD)", "4": "UHV(AW)", "5": "", "6": ""}},
+        "D4B": {"room": "523", "slots": {"1": "UHV(AW)", "2": "", "3": "", "4": "", "5": "CAD-B2(MS)/PCE-1-B1(SI)", "6": ""}}
+      }
+    }
+  }
+}

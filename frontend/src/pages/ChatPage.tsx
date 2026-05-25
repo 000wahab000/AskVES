@@ -1,4 +1,4 @@
-import { Utensils, Calendar, Users, Printer, CupSoda } from 'lucide-react'
+﻿import { Utensils, Calendar, Users, Printer, CupSoda } from 'lucide-react'
 import { TopNavbar }    from '../components/TopNavbar'
 import { MobileTabBar } from '../components/MobileTabBar'
 import { ChatWindow }   from '../components/ChatWindow'
@@ -23,14 +23,14 @@ export default function ChatPage() {
               fontFamily: 'Space Grotesk', 
               fontWeight: 600, 
               fontSize: '22px', 
-              color: '#e8edf8', 
+              color: '#dce8f5', 
               marginBottom: '12px' }}>
               Unofficial AI Assistant for VESIT Students
             </h2>
 
             <div 
             className="disclaimer-badge">
-              ⚠ Not affiliated with or endorsed by VESIT
+              âš  Not affiliated with or endorsed by VESIT
             </div>
 
             <div className="divider" />
@@ -38,7 +38,7 @@ export default function ChatPage() {
               fontFamily: 'Space Grotesk', 
               fontWeight: 500, 
               fontSize: '15px', 
-              color: '#8fa3c0', 
+              color: '#7a9bbf', 
               marginBottom: '14px', 
               textTransform: 'uppercase', 
               letterSpacing: '0.06em' 
@@ -51,7 +51,7 @@ export default function ChatPage() {
                 <div key={label} className="feature-card">
 
                   <div style={{ 
-                    color: '#c8390a', 
+                    color: '#1a7fa8', 
                     marginBottom: '8px' 
                     }}>
                     <Icon size={18} strokeWidth={2} />
@@ -61,7 +61,7 @@ export default function ChatPage() {
                     fontFamily: 'DM Sans', 
                     fontWeight: 500, 
                     fontSize: '14px', 
-                    color: '#e8edf8', 
+                    color: '#dce8f5', 
                     marginBottom: '3px' 
                     }}>
                     {label}
@@ -70,7 +70,7 @@ export default function ChatPage() {
                   <div style={{ 
                     fontFamily: 'DM Sans', 
                     fontSize: '12px', 
-                    color: '#8fa3c0' }}>
+                    color: '#7a9bbf' }}>
                     {desc}
                   </div>
                 </div>
@@ -88,7 +88,7 @@ export default function ChatPage() {
               fontFamily: 'Space Grotesk', 
               fontWeight: 500, 
               fontSize: '14px', 
-              color: '#e8edf8', 
+              color: '#dce8f5', 
               marginBottom: '4px' 
 
               }}>
@@ -99,7 +99,7 @@ export default function ChatPage() {
             style={{ 
               fontFamily: 'DM Sans', 
               fontSize: '12px', 
-              color: '#8fa3c0', 
+              color: '#7a9bbf', 
               marginBottom: '4px' 
 
               }}>
@@ -110,7 +110,7 @@ export default function ChatPage() {
             style={{ 
               fontFamily: 'DM Sans', 
               fontSize: '11px', 
-              color: '#4d6380' 
+              color: '#3d5a7a' 
 
               }}>
               Built at UniMerge 2026
