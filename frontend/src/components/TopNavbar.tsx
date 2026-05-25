@@ -1,14 +1,14 @@
 ﻿import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 const NAV = [
-  { label: 'Chat',       path: '/' },
-  { label: 'Community',  path: '/community' },
-  { label: 'Notes',      path: '/notes' },
-  { label: 'Campus',     path: '/campus' },
-  { label: 'Placements', path: '/placements' },
-  { label: 'Teachers',   path: '/teachers' },
-  { label: 'Attendance', path: '/attendance' },
-  { label: 'Profile',    path: '/profile' },
+  { label: 'Chat',       path: '/'            },
+  { label: 'Community',  path: '/community'   },
+  { label: 'Notes',      path: '/notes'       },
+  { label: 'Campus',     path: '/campus'      },
+  { label: 'Placements', path: '/placements'  },
+  { label: 'Teachers',   path: '/teachers'    },
+  { label: 'Attendance', path: '/attendance'  },
+  { label: 'Profile',    path: '/profile'     },
 ]
 
 export function TopNavbar() {

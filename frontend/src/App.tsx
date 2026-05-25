@@ -16,29 +16,34 @@ import { Login } from './pages/Login'
 
 function RequireAuth({ children } : { children: ReactNode}){
   const location = useLocation()
-
-
-  const user = localStorage.getItem('askves_user')
+  const rawUser = localStorage.getItem('askves_user')
+  let userObj = null
   
-  if (!user) {
-    return <Navigate to="login" state={{from : location}}
-    replace />
+  if (rawUser) {
+    try {
+      userObj = JSON.parse(rawUser)
+    } catch {
+      localStorage.removeItem('askves_user')
     }
-    return children
   }
+  
+  if (!userObj) {
+    return <Navigate to="/login" state={{from : location}} replace />
+  }
+  return children
+}
   
 
 export default function App() {
   return (
-    // BrowserRouter enables navigation between pages without full page reload
     <BrowserRouter>
       <Routes>
         {/* Route = "when URL is /something, show this page" */}
+        <Route path="/login"      element={<Login />}              />
         <Route path="/"           element={<RequireAuth><ChatPage /></RequireAuth>}></Route>
         <Route path="/community"  element={<RequireAuth><CommunityPage /></RequireAuth>} />
         <Route path="/notes"      element={<RequireAuth><NotesMarketplace /></RequireAuth>}   />
         <Route path="/attendance" element={<RequireAuth><AttendanceTracker /></RequireAuth>}  />
-        <Route path="/login"      element={<Login />}              />
         <Route path="*" element={<NotFound />} />      </Routes>
     </BrowserRouter>
   )

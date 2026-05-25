@@ -10,7 +10,7 @@ export function Login() {
 
 function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-   localStorage.setItem('askves_user', email)
+   localStorage.setItem('askves_user',JSON.stringify({email}) )
    navigate('/')
   }
    return (

@@ -187,8 +187,12 @@ export function AttendanceTracker() {
     <button
       onClick={onClick}
       style={{
-        display: "flex", alignItems: "center", gap: "4px",
-        padding: "6px 12px", borderRadius: "6px", cursor: "pointer",
+        display: "flex", 
+        alignItems: "center", 
+        gap: "4px",
+        padding: "6px 12px", 
+        borderRadius: "6px", 
+        cursor: "pointer",
         border: active ? `1px solid ${color}` : "1px solid rgba(100,160,220,0.15)",
         backgroundColor: active ? `${color}22` : "transparent",
         color: active ? color : "#3d5a7a",
