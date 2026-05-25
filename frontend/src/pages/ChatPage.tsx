@@ -30,7 +30,7 @@ export default function ChatPage() {
 
             <div 
             className="disclaimer-badge">
-              âš  Not affiliated with or endorsed by VESIT
+              as Not affiliated with or endorsed by VESIT
             </div>
 
             <div className="divider" />
