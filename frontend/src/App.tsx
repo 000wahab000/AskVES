@@ -38,9 +38,8 @@ export default function App() {
         <Route path="/community"  element={<RequireAuth><CommunityPage /></RequireAuth>} />
         <Route path="/notes"      element={<RequireAuth><NotesMarketplace /></RequireAuth>}   />
         <Route path="/attendance" element={<RequireAuth><AttendanceTracker /></RequireAuth>}  />
-        <Route path="/login"      element={<RequireAuth><Login /></RequireAuth>}              />
-        <Route path="*"           element={<RequireAuth><NotFound /></RequireAuth>}           />
-      </Routes>
+        <Route path="/login"      element={<Login />}              />
+        <Route path="*" element={<NotFound />} />      </Routes>
     </BrowserRouter>
   )
 }
