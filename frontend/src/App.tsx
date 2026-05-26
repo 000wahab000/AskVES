@@ -11,6 +11,7 @@ import { NotesMarketplace } from './pages/NotesMarketplace'
 import { AttendanceTracker } from './pages/AttendanceTracker'
 import { NotFound } from './pages/NotFound'
 import { Login } from './pages/Login'
+import { Profile } from './pages/Profile'
 // This is the main App component — React renders this first
 
 
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/community"  element={<RequireAuth><CommunityPage /></RequireAuth>} />
         <Route path="/notes"      element={<RequireAuth><NotesMarketplace /></RequireAuth>}   />
         <Route path="/attendance" element={<RequireAuth><AttendanceTracker /></RequireAuth>}  />
+        <Route path='/profile'    element={<RequireAuth><Profile /></RequireAuth>} />
         <Route path="*" element={<NotFound />} />      </Routes>
     </BrowserRouter>
   )
