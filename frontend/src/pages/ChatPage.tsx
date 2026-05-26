@@ -1,7 +1,9 @@
-﻿import { Utensils, Calendar, Users, Printer, CupSoda } from 'lucide-react'
+﻿import { Link } from 'react-router-dom'
+import { Utensils, Calendar, Users, Printer, CupSoda } from 'lucide-react'
 import { TopNavbar }    from '../components/TopNavbar'
 import { MobileTabBar } from '../components/MobileTabBar'
 import { ChatWindow }   from '../components/ChatWindow'
+import { NOTICES, categoryColor } from '../data/notices'
 
 const FEATURES = [
   { Icon: Utensils, label: 'Canteen',   desc: 'Menu & prices' },
@@ -28,8 +30,7 @@ export default function ChatPage() {
               Unofficial AI Assistant for VESIT Students
             </h2>
 
-            <div 
-            className="disclaimer-badge">
+            <div className="disclaimer-badge">
               as Not affiliated with or endorsed by VESIT
             </div>
 
@@ -45,7 +46,96 @@ export default function ChatPage() {
               }}>
               What It Can Do
             </h3>
-
+          <div className='card'>
+            <div style={{
+                display:'flex',
+                alignItems:'center',
+                justifyContent:'space-between',
+                marginBottom:'16px'
+              }}>
+                <h3 style={{
+                  fontFamily: 'Space Grotesk',
+                  fontWeight: 600,
+                  fontSize: '15px',
+                  color: 'var(--t1)',
+                  }}>
+                    Latest Notices
+                  </h3>
+              </div>
+                    {/* Link to the full notice board page */}
+              <Link to="/campus" 
+               style={{
+                fontFamily: 'DM Sans',
+                fontSize: '12px',
+                color: 'var(--accent)',
+                textDecoration: 'none',
+                  }}>
+                View all →
+              </Link>
+          </div>
+             {/* Show only the first 3 notices using .slice(0, 3) */}
+          <div style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '10px' 
+              }}>
+              {NOTICES.slice(0, 3).map((notice) => (
+            <div key={notice.id} 
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                  paddingBottom: '10px',
+                  borderBottom: '1px solid var(--border)',
+                }}>
+                {/* Show only the first 3 notices using .slice(0, 3) */}
+              <div 
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '10px' }}>
+                {NOTICES.slice(0, 3).map((notice) => (
+                  <div key={notice.id} 
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    paddingBottom: '10px',
+                    borderBottom: '1px solid var(--border)',
+                  }}>
+                    {/* Colored dot — shows category at a glance */}
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: categoryColor(notice.category),
+                      flexShrink: 0,
+                      marginTop: '5px',
+                    }} />
+                    {/* Notice text */}
+                    <div>
+                      <p style={{
+                        fontFamily: 'DM Sans',
+                        fontSize: '13px',
+                        color: 'var(--t1)',
+                        marginBottom: '2px',
+                        lineHeight: 1.4,
+                      }}>
+                        {notice.title}
+                      </p>
+                      <p style={{
+                        fontFamily: 'DM Sans',
+                        fontSize: '11px',
+                        color: 'var(--t3)',
+                      }}>
+                        {notice.date} · {notice.category}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+           </div>
             <div className="feature-grid">
               {FEATURES.map(({ Icon, label, desc }) => (
                 <div key={label} className="feature-card">
@@ -77,8 +167,7 @@ export default function ChatPage() {
               ))}
             </div>
           </div>
-
-          <div 
+        <div 
           className="card" 
           style={{ 
             padding: '16px 20px' 
