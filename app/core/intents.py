@@ -1,4 +1,4 @@
-import re, json, time, traceback
+import re, json, time, traceback, hashlib
 import app.services.db as db
 from app.services.ai import ai_manager
 from app.utils.helpers import get_current_slot
@@ -6,6 +6,17 @@ from app.core.state import metrics
 from app.utils.logger import logger
 
 SYNONYM_MAP = None
+# system cleaner btw
+jSON_CACHE: dict = {}
+def get_json_str(data_dict: dict, name:str) -> str:
+    h = hashlib.md5(json.dumps(data_dict,sort_keys=True).encode()).hexdigest()
+    if jSON_CACHE.get(name, {}).get('hash') != h:
+        jSON_CACHE[name] = {
+            'hash':h,
+            'str': json.dumps(data_dict, separators=(',',':'))
+        }
+
+        return jSON_CACHE[name]['str']
 
 def init_synonyms():
     s_map = {
@@ -57,23 +68,24 @@ def ask(question):
     context_parts = []
 
     if any(w in q_lower for w in ['canteen', 'food', 'eat', 'lunch', 'menu', 'cheap', 'price', 'meal', 'snack', 'breakfast']):
-        context_parts.append(f"CANTEEN:{json.dumps(db.canteen_data, separators=(',',':'))}")
+        context_parts.append(f"CANTEEN:{get_json_str(db.canteen_data, 'canteen')}")
 
     if any(w in q_lower for w in ['teacher', 'professor', 'sir', 'ma\'am', 'maam', 'faculty', 'timetable', 'class', 'room', 'slot', 'lecture', 'mj', 'mugdha']):
-        context_parts.append(f"TIMETABLE_TODAY:{json.dumps(db.timetable_data.get('timetable', {}).get(day, {}), separators=(',',':'))}")
+        today_tt = db.timetable_data.get('timetable', {}).get(day, {})
+        context_parts.append(f"TIMETABLE_TODAY:{get_json_str(today_tt, f'timetable_{day}')}")
 
     if any(w in q_lower for w in ['xerox', 'print', 'photocopy', 'copy', 'printout']):
-        context_parts.append(f"XEROX:{json.dumps(db.xerox_data, separators=(',',':'))}")
+        context_parts.append(f"XEROX:{get_json_str(db.xerox_data, 'xerox')}")
 
     if any(w in q_lower for w in ['vend', 'vending', 'machine', 'chips', 'cold drink', 'snack', 'drinks']):
-        context_parts.append(f"VENDING:{json.dumps(db.vending_data, separators=(',',':'))}")
+        context_parts.append(f"VENDING:{get_json_str(db.vending_data, 'vending')}")
 
     if any(w in q_lower for w in ['event', 'workshop', 'seminar', 'fest', 'competition', 'happening', 'week']):
-        context_parts.append(f"EVENTS:{json.dumps(db.events_data, separators=(',',':'))}")
+        context_parts.append(f"EVENTS:{get_json_str(db.events_data, 'events')}")
 
     if any(w in q_lower for w in ["friend", "correction", "this is wrong"]):
-        db.community_data.get('facts')
-        context_parts.append(f"COMMUNITY FACTS:{json.dumps(db.community_data['facts'], separators=(',',':'))}")
+        facts = db.community_data.get('facts', [])
+        context_parts.append(f"COMMUNITY FACTS:{get_json_str({'facts': facts}, 'community')}")
 
     if not context_parts:
         context_parts.append("You can answer general campus questions. If info not found, suggest admin office or notice board.")
