@@ -13,6 +13,7 @@ import { NotFound } from './pages/NotFound'
 import { Login } from './pages/Login'
 import { Profile } from './pages/Profile'
 import { NoticeBoard } from './pages/NoticeBoard'
+import { LandingPage } from './pages/LandingPage'
 // This is the main App component — React renders this first
 
 
@@ -30,7 +31,7 @@ function RequireAuth({ children } : { children: ReactNode}){
   }
   
   if (!userObj) {
-    return <Navigate to="/login" state={{from : location}} replace />
+    return <Navigate to="/" state={{from : location}} replace />
   }
   return children
 }
@@ -42,13 +43,14 @@ export default function App() {
       <Routes>
         {/* Route = "when URL is /something, show this page" */}
         <Route path="/login"      element={<Login />}              />
-        <Route path="/"           element={<RequireAuth><ChatPage /></RequireAuth>}></Route>
-        <Route path="/community"  element={<RequireAuth><CommunityPage /></RequireAuth>} />
-        <Route path="/notes"      element={<RequireAuth><NotesMarketplace /></RequireAuth>}   />
-        <Route path="/attendance" element={<RequireAuth><AttendanceTracker /></RequireAuth>}  />
-        <Route path='/profile'    element={<RequireAuth><Profile /></RequireAuth>} />
-        <Route path='/notice'     element={<RequireAuth><NoticeBoard /></RequireAuth>} />
-        <Route path="*" element={<NotFound />} />      </Routes>
+        <Route path="/"        element={<LandingPage />} />
+        <Route path="/chat"       element={<RequireAuth><ChatPage />          </RequireAuth>} />
+        <Route path="/community"  element={<RequireAuth><CommunityPage />     </RequireAuth>} />
+        <Route path="/notes"      element={<RequireAuth><NotesMarketplace />  </RequireAuth>} />
+        <Route path="/attendance" element={<RequireAuth><AttendanceTracker /> </RequireAuth>} />
+        <Route path='/profile'    element={<RequireAuth><Profile />           </RequireAuth>} />
+        <Route path='/notice'     element={<RequireAuth><NoticeBoard />       </RequireAuth>} />
+        <Route path="*"           element={<NotFound />} /></Routes>
     </BrowserRouter>
   )
 }

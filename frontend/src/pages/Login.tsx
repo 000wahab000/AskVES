@@ -11,7 +11,7 @@ export function Login() {
 function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
    localStorage.setItem('askves_user',JSON.stringify({email}) )
-   navigate('/')
+   navigate('chat/')
   }
    return (
     <div style={{
