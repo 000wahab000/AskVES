@@ -27,7 +27,7 @@ body {
   font-family: 'DM Sans', sans-serif;
 }
 
-/* ── Page shell ── */
+/* -- Page shell -- */
 .page-shell {
   min-height: 100vh;
   background: var(--bg);
@@ -37,7 +37,7 @@ body {
   .page-shell { padding-bottom: 60px; }
 }
 
-/* ── Main layout ── */
+/* -- Main layout -- */
 .chat-layout {
   max-width: 1600px;
   margin: 0 auto;
@@ -49,7 +49,7 @@ body {
   .chat-layout { padding: 16px; }
 }
 
-/* ── Left info panel ── */
+/* -- Left info panel -- */
 .info-panel {
   width: 60%;
   display: flex;
@@ -61,13 +61,13 @@ body {
   .info-panel { display: none; }
 }
 
-/* ── Right chat panel ── */
+/* -- Right chat panel -- */
 .chat-panel {
   flex: 1;
   min-width: 0;
 }
 
-/* ── Cards ── */
+/* -- Cards -- */
 .card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -75,7 +75,7 @@ body {
   padding: 20px;
 }
 
-/* ── Feature grid ── */
+/* -- Feature grid -- */
 .feature-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -92,7 +92,7 @@ body {
 }
 .feature-card:hover { border-color: var(--border-hi); }
 
-/* ── Navbar ── */
+/* -- Navbar -- */
 .top-navbar {
   height: 56px;
   background: var(--bg);
@@ -153,7 +153,7 @@ body {
 }
 .login-btn:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.04); }
 
-/* ── Mobile tab bar ── */
+/* -- Mobile tab bar -- */
 .mobile-tab-bar {
   display: none;
   position: fixed;
@@ -184,7 +184,7 @@ body {
 .tab-item.active { color: var(--accent); }
 .tab-item:hover  { color: var(--t2); }
 
-/* ── Chat window ── */
+/* -- Chat window -- */
 .chat-window {
   display: flex;
   flex-direction: column;
@@ -374,7 +374,7 @@ body {
 
 .divider { height: 1px; background: var(--border); margin: 0 0 18px; }
 
-/* ── Community Page ── */
+/* -- Community Page -- */
 .community-layout {
   display: flex;
   flex-direction: column;
@@ -394,7 +394,7 @@ body {
   .sidebar-column { display: block; flex: 0 0 30%; }
 }
 
-/* ── Category Filter Bar ── */
+/* -- Category Filter Bar -- */
 .categories-scroll {
   margin-bottom: 24px;
   overflow-x: auto;
@@ -426,7 +426,7 @@ body {
   border-color: rgba(26,127,168,0.35);
 }
 
-/* ── Post Card Header ── */
+/* -- Post Card Header -- */
 .post-header {
   display: flex;
   align-items: flex-start;
@@ -485,7 +485,7 @@ body {
   color: var(--t3);
 }
 
-/* ── Post Body ── */
+/* -- Post Body -- */
 .post-body {
   font-size: 14px;
   line-height: 1.6;
@@ -493,7 +493,7 @@ body {
   margin-bottom: 16px;
 }
 
-/* ── Post Footer Buttons ── */
+/* -- Post Footer Buttons -- */
 .post-footer {
   display: flex;
   align-items: center;
@@ -515,7 +515,7 @@ body {
 .action-btn.upvoted { color: var(--accent); }
 .action-btn.report-btn { margin-left: auto; }
 
-/* ── Poll ── */
+/* -- Poll -- */
 .poll-container {
   display: flex;
   flex-direction: column;
@@ -552,7 +552,7 @@ body {
   color: var(--t2);
 }
 
-/* ── Trending Sidebar ── */
+/* -- Trending Sidebar -- */
 .trending-card {
   position: sticky;
   top: 80px;
@@ -613,7 +613,7 @@ body {
   text-align: left;
 }
 
-/* ── Floating Action Button ── */
+/* -- Floating Action Button -- */
 .floating-action-btn {
   position: fixed;
   bottom: 96px;
@@ -636,7 +636,7 @@ body {
   .floating-action-btn { bottom: 32px; }
 }
 
-/* ── Notes Marketplace ── */
+/* -- Notes Marketplace -- */
 .notes-icon-box {
   width: 60px;
   height: 80px;
@@ -721,7 +721,7 @@ body {
   border-color: rgba(255,255,255,0.25);
 }
 
-/* ── Shared page layout helpers ── */
+/* -- Shared page layout helpers -- */
 .page-wrapper {
   min-height: 100vh;
   background: var(--bg);
@@ -781,7 +781,7 @@ body {
   color: var(--t1);
 }
 
-/* ── Summary stat cards row ── */
+/* -- Summary stat cards row -- */
 .stat-cards-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -792,7 +792,7 @@ body {
   .stat-cards-row { grid-template-columns: repeat(4, 1fr); }
 }
 
-/* ── Two-column grid (subject stats, etc.) ── */
+/* -- Two-column grid (subject stats, etc.) -- */
 .two-col-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -802,7 +802,7 @@ body {
   .two-col-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* ── Tab bar (Today / Week / Stats) ── */
+/* -- Tab bar (Today / Week / Stats) -- */
 .tab-strip {
   display: flex;
   gap: 8px;
@@ -810,7 +810,7 @@ body {
   flex-wrap: wrap;
 }
 
-/* ── Filter pill row (day selector, dept filter, etc.) ── */
+/* -- Filter pill row (day selector, dept filter, etc.) -- */
 .filter-pill-row {
   display: flex;
   gap: 8px;
@@ -818,7 +818,7 @@ body {
   margin-bottom: 24px;
 }
 
-/* ── Warning / alert banner ── */
+/* -- Warning / alert banner -- */
 .warning-banner {
   display: flex;
   align-items: flex-start;
@@ -830,27 +830,27 @@ body {
   margin-bottom: 32px;
 }
 
-/* ── Card list (vertical stack of cards) ── */
+/* -- Card list (vertical stack of cards) -- */
 .card-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-/* ── Inline row: icon + text side-by-side ── */
+/* -- Inline row: icon + text side-by-side -- */
 .icon-text-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* ── Stat mini-group inside a card ── */
+/* -- Stat mini-group inside a card -- */
 .mini-stats-row {
   display: flex;
   gap: 16px;
 }
 
-/* ── Attendance tracker specific ── */
+/* -- Attendance tracker specific -- */
 .attendance-class-row {
   display: flex;
   align-items: center;
@@ -864,7 +864,7 @@ body {
   flex-wrap: wrap;
 }
 
-/* ── Teacher locator specific ── */
+/* -- Teacher locator specific -- */
 .teacher-card-header {
   display: flex;
   align-items: center;
@@ -892,13 +892,13 @@ body {
   flex-wrap: wrap;
 }
 
-/* ── Search bar wrapper ── */
+/* -- Search bar wrapper -- */
 .search-bar-wrapper {
   position: relative;
   margin-bottom: 24px;
 }
 
-/* ── Center empty state message ── */
+/* -- Center empty state message -- */
 .empty-state {
   text-align: center;
   padding: 60px 0;

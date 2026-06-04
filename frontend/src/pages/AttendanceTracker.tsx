@@ -14,14 +14,14 @@ const DAY_LABELS  = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 // e.g. "EP-B1(MT)/BEE-B2(MJ)" -> "EP / BEE"
 // e.g. "FEM-II-TUT(RS/AD)"   -> "FEM-II-TUT"
 function parseSubjectCode(slot: string): string {
-  if (!slot) return "\u2014";
+  if (!slot) return "none";
   const parts = slot.split("/").map(p => {
     const idx = p.indexOf("(");
     const raw = idx > -1 ? p.slice(0, idx) : p;
     return raw.replace(/-B(atch)?[12]$/i, "").trim();
   });
   const unique = [...new Set(parts.filter(Boolean))];
-  return unique.length ? unique.join(" / ") : "\u2014";
+  return unique.length ? unique.join(" / ") : "\none";
 }
 
 // --- Build schedule for a given class code -----------------------------------
@@ -32,8 +32,8 @@ function buildClassTimetable(classCode: string) {
   const periodTimes = slotDefs.map(s => `${s.start}\u2013${s.end}`);
   const numSlots    = slotDefs.length; // 6
 
-  // timetable[dayIdx][slotIdx] = subject string | "\u2014"
-  const timetable: string[][] = DAYS_ORDER.map(() => Array(numSlots).fill("\u2014"));
+  // timetable[dayIdx][slotIdx] = subject string | "\none"
+  const timetable: string[][] = DAYS_ORDER.map(() => Array(numSlots).fill("\none"));
 
   DAYS_ORDER.forEach((day, dayIdx) => {
     const dayData = tt[day];
@@ -56,7 +56,7 @@ function buildClassTimetable(classCode: string) {
   const subjectSet = new Set<string>();
   timetable.forEach(day =>
     day.forEach(cell => {
-      if (cell !== "\u2014") cell.split(" / ").forEach(s => subjectSet.add(s.trim()));
+      if (cell !== "\none") cell.split(" / ").forEach(s => subjectSet.add(s.trim()));
     })
   );
 
@@ -128,9 +128,9 @@ export function AttendanceTracker() {
       if (parts.length < 4) return;
       const dIdx = parseInt(parts[2]);
       const sIdx = parseInt(parts[3]);
-      const cell = TIMETABLE[dIdx]?.[sIdx] ?? "\u2014";
+      const cell = TIMETABLE[dIdx]?.[sIdx] ?? "\none";
       // cell may be "EP / BEE" - check if subject appears
-      if (cell !== "\u2014" && cell.split(" / ").map(s => s.trim()).includes(subject)) {
+      if (cell !== "\none" && cell.split(" / ").map(s => s.trim()).includes(subject)) {
         if (status !== "cancelled") { held++; if (status === "present") present++; }
       }
     });
@@ -207,7 +207,7 @@ export function AttendanceTracker() {
   const DayClassRow = ({ subject, slotIdx, dayIdx, date }: {
     subject: string; slotIdx: number; dayIdx: number; date: string;
   }) => {
-    if (subject === "\u2014") return null;
+    if (subject === "\none") return null;
     const status = getStatus(date, dayIdx, slotIdx);
     return (
       <div className="attendance-class-row" style={{
@@ -254,7 +254,7 @@ export function AttendanceTracker() {
             <h1 className="page-title">Attendance Tracker</h1>
             <p className="page-subtitle">
               {classCode
-                ? `Class ${classCode} \u00b7 ${user?.department ?? ""} ${user?.year ?? ""} \u00b7 synced from timetable`
+                ? `Class ${classCode}-- ${user?.department ?? ""} ${user?.year ?? ""}-- synced from timetable`
                 : "Login to see your personalised timetable"}
             </p>
           </div>
@@ -304,7 +304,7 @@ export function AttendanceTracker() {
         {/* Overall stat cards */}
         <div className="stat-cards-row">
           {[
-            { label: "Overall",       value: overallPct !== null ? `${overallPct}%` : "\u2014", sub: "attendance",    color: pctColor(overallPct) },
+            { label: "Overall",       value: overallPct !== null ? `${overallPct}%` : "\none", sub: "attendance",    color: pctColor(overallPct) },
             { label: "Classes Held",  value: String(totalHeld),                                 sub: "total tracked", color: "#dce8f5"            },
             { label: "Present",       value: String(totalPresent),                              sub: "marked present", color: "#4ade80"            },
             { label: "Absent",        value: String(totalHeld - totalPresent),                  sub: "missed",         color: "#f87171"            },
@@ -331,7 +331,7 @@ export function AttendanceTracker() {
               <p style={{ fontFamily: "DM Sans", fontSize: "13px", color: "#7a9bbf" }}>
                 {allStats.filter(s => s.pct !== null && s.pct < 75).map(s =>
                   `${s.subject}: ${s.pct}% (attend ${classesNeeded(s.subject)} more)`
-                ).join(" \u00b7 ")}
+                ).join("-- ")}
               </p>
             </div>
           </div>
@@ -363,19 +363,19 @@ export function AttendanceTracker() {
         {activeTab === "today" && (
           <div>
             {todayDayIdx < 0 ? (
-              <div className="empty-state">\uD83C\uDF89 It&apos;s the weekend \u2014 no classes today!</div>
+              <div className="empty-state">\uD83C\uDF89 It&apos;s the weekend \none no classes today!</div>
             ) : (
               <div>
                 <div className="section-heading-row">
                   <div className="section-heading-bar" />
-                  <h2 className="section-heading-text">{DAY_LABELS[todayDayIdx]} \u00b7 {today}</h2>
+                  <h2 className="section-heading-text">{DAY_LABELS[todayDayIdx]}-- {today}</h2>
                 </div>
                 <div className="card-list">
                   {TIMETABLE[todayDayIdx].map((subject, sIdx) => (
                     <DayClassRow key={sIdx} subject={subject} slotIdx={sIdx} dayIdx={todayDayIdx} date={today} />
                   ))}
                 </div>
-                {TIMETABLE[todayDayIdx].every(s => s === "\u2014") && (
+                {TIMETABLE[todayDayIdx].every(s => s === "\none") && (
                   <div className="empty-state">No classes scheduled for today.</div>
                 )}
               </div>
@@ -401,7 +401,7 @@ export function AttendanceTracker() {
                     fontFamily: "DM Sans", fontWeight: isToday ? 600 : 400,
                     fontSize: "14px", cursor: "pointer",
                   }}>
-                    {day.slice(0, 3)}{isToday && " \u00b7 Today"}
+                    {day.slice(0, 3)}{isToday && "-- Today"}
                   </button>
                 );
               })}
@@ -438,7 +438,7 @@ export function AttendanceTracker() {
                       <p style={{ fontFamily: "DM Sans", fontSize: "12px", color: "#3d5a7a" }}>{held} classes tracked</p>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <p style={{ fontFamily: "Space Grotesk", fontWeight: 700, fontSize: "28px", color }}>{pct !== null ? `${pct}%` : "\u2014"}</p>
+                      <p style={{ fontFamily: "Space Grotesk", fontWeight: 700, fontSize: "28px", color }}>{pct !== null ? `${pct}%` : "\none"}</p>
                       {pct !== null && pct < 75  && <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#f87171" }}>&rarr; attend {need} more</p>}
                       {pct !== null && pct >= 75 && pct < 85 && <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#fbbf24" }}>&#9888; borderline</p>}
                       {pct !== null && pct >= 85 && <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#4ade80" }}>&#10003; safe</p>}
@@ -460,7 +460,7 @@ export function AttendanceTracker() {
                     </div>
                     <div>
                       <p style={{ fontFamily: "DM Sans", fontSize: "11px", color: "#3d5a7a" }}>75% target</p>
-                      <p style={{ fontFamily: "Space Grotesk", fontWeight: 600, fontSize: "16px", color: "#dce8f5" }}>{held > 0 ? Math.ceil(held * 0.75) : "\u2014"}</p>
+                      <p style={{ fontFamily: "Space Grotesk", fontWeight: 600, fontSize: "16px", color: "#dce8f5" }}>{held > 0 ? Math.ceil(held * 0.75) : "\none"}</p>
                     </div>
                   </div>
                 </div>
