@@ -4,6 +4,18 @@ from app.core.router import Handler
 import app.services.db as db
 from app.services.ai import ai_manager
 from app.utils.logger import logger
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.routes import chat, auth, community, admin 
+app = FastAPI()
+app.add_middleware(CORSMiddleware,
+allow_origins=["https://yourfrontend.com"],allow_methods=["*"],allows_headers=["*"])
+
+app.include_router(chat.router)
+app.include_router(auth.router)
+app.include_router(community.router)
+app.include_router(admin.router)
+
 
 def start_server():
     db.init_db()
