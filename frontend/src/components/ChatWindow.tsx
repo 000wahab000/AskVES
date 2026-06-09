@@ -20,6 +20,8 @@ const WELCOME: Message = {
   text: "Hi! I'm AskVES 👋\nAsk me anything about VESIT — canteen menu, teacher locations, xerox shops, upcoming events, and more.",
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 export function ChatWindow() {
   const [messages, setMessages] = useState<Message[]>([WELCOME])
   const [input, setInput]       = useState('')
@@ -40,7 +42,7 @@ export function ChatWindow() {
     setLoading(true)
 
     try {
-      const res  = await fetch('http://localhost:8000/ask', {
+      const res  = await fetch(`${API_URL}/ask`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ question: q }),

@@ -1,0 +1,37 @@
+{
+  "name": "AskVES — VESIT AI Campus Assistant",
+  "short_name": "AskVES",
+  "description": "Your AI-powered campus companion for VESIT students.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060e1f",
+  "theme_color": "#1a7fa8",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "utilities"],
+  "shortcuts": [
+    {
+      "name": "AI Chat",
+      "url": "/chat",
+      "description": "Ask anything about VESIT"
+    },
+    {
+      "name": "Attendance",
+      "url": "/attendance",
+      "description": "Track your attendance"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import { Navigate , useLocation } from 'react-router-dom'
 // Import our CSS styling
 import './index.css'
 import {type ReactNode } from 'react'
+import { ErrorBoundary } from './components/ErrorBoundary'
 // Import only the pages we KEPT
 import ChatPage from './pages/ChatPage'
 import CommunityPage from './pages/CommunityPage'
@@ -17,40 +18,47 @@ import { LandingPage } from './pages/LandingPage'
 // This is the main App component — React renders this first
 
 
+import { useState, useEffect } from 'react'
+import { supabase } from './lib/supabase'
+
 function RequireAuth({ children } : { children: ReactNode}){
   const location = useLocation()
-  const rawUser = localStorage.getItem('askves_user')
-  let userObj = null
-  
-  if (rawUser) {
-    try {
-      userObj = JSON.parse(rawUser)
-    } catch {
-      localStorage.removeItem('askves_user')
-    }
-  }
-  
-  if (!userObj) {
-    return <Navigate to="/" state={{from : location}} replace />
-  }
+  const [checking, setChecking] = useState(true)
+  const [authed, setAuthed] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setAuthed(!!data.session)
+      setChecking(false)
+    })
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setAuthed(!!session)
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
+  if (checking) return null   // brief loading — avoids flash redirect
+  if (!authed) return <Navigate to="/login" state={{from : location}} replace />
   return children
 }
   
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Route = "when URL is /something, show this page" */}
-        <Route path="/login"      element={<Login />}              />
-        <Route path="/"        element={<LandingPage />} />
-        <Route path="/chat"       element={<RequireAuth><ChatPage />          </RequireAuth>} />
-        <Route path="/community"  element={<RequireAuth><CommunityPage />     </RequireAuth>} />
-        <Route path="/notes"      element={<RequireAuth><NotesMarketplace />  </RequireAuth>} />
-        <Route path="/attendance" element={<RequireAuth><AttendanceTracker /> </RequireAuth>} />
-        <Route path='/profile'    element={<RequireAuth><Profile />           </RequireAuth>} />
-        <Route path='/notice'     element={<RequireAuth><NoticeBoard />       </RequireAuth>} />
-        <Route path="*"           element={<NotFound />} /></Routes>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          {/* Route = "when URL is /something, show this page" */}
+          <Route path="/login"      element={<Login />}              />
+          <Route path="/"        element={<LandingPage />} />
+          <Route path="/chat"       element={<RequireAuth><ChatPage />          </RequireAuth>} />
+          <Route path="/community"  element={<RequireAuth><CommunityPage />     </RequireAuth>} />
+          <Route path="/notes"      element={<RequireAuth><NotesMarketplace />  </RequireAuth>} />
+          <Route path="/attendance" element={<RequireAuth><AttendanceTracker /> </RequireAuth>} />
+          <Route path='/profile'    element={<RequireAuth><Profile />           </RequireAuth>} />
+          <Route path='/notice'     element={<RequireAuth><NoticeBoard />       </RequireAuth>} />
+          <Route path="*"           element={<NotFound />} /></Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }

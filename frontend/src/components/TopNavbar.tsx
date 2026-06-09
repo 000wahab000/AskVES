@@ -1,4 +1,7 @@
-﻿import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { signOut } from '../lib/supabase'
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
 
 const NAV = [
   { label: 'Chat',       path: '/'            },
@@ -14,12 +17,36 @@ const NAV = [
 export function TopNavbar() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const [user, setUser] = useState<{ name?: string; email?: string; picture?: string } | null>(null)
 
-  const rawUser = localStorage.getItem('askves_user')
-  const user = rawUser ? JSON.parse(rawUser) : null
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        const u = data.session.user
+        setUser({
+          name: u.user_metadata?.full_name ?? u.email?.split('@')[0],
+          email: u.email,
+          picture: u.user_metadata?.avatar_url,
+        })
+      }
+    })
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session?.user) {
+        const u = session.user
+        setUser({
+          name: u.user_metadata?.full_name ?? u.email?.split('@')[0],
+          email: u.email,
+          picture: u.user_metadata?.avatar_url,
+        })
+      } else {
+        setUser(null)
+      }
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [])
 
-  function handleLogout() {
-    localStorage.removeItem('askves_user')
+  async function handleLogout() {
+    await signOut()
     navigate('/login')
   }
 
@@ -79,7 +106,7 @@ export function TopNavbar() {
                 {user.name?.[0] ?? 'U'}
               </div>
               <span style={{ fontFamily: 'DM Sans', fontSize: '13px', color: '#dce8f5', fontWeight: 500 }}>
-                {user.department} Â· {user.year} Â· {user.classCode}
+                {user.name ?? user.email}
               </span>
             </div>
 
