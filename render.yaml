@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: askves-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: GROQ_API_KEYS
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: PORT
+        value: "10000"
