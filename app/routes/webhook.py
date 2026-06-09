@@ -1,7 +1,8 @@
-import json
-from urllib.parse import parse_qs
+from fastapi import APIRouter, Request, Response
 from app.core.intents import ask
 from app.utils.logger import logger
+
+router = APIRouter()
 
 try:
     from twilio.twiml.messaging_response import MessagingResponse
@@ -9,33 +10,21 @@ try:
 except ImportError:
     TWILIO_AVAILABLE = False
 
-def handle_whatsapp_webhook(handler):
-    try:
-        length = int(handler.headers["Content-Length"])
-        body = handler.rfile.read(length).decode('utf-8')
-        post_data = parse_qs(body)
-        user_message = post_data.get('Body', [''])[0].strip()
 
-        if user_message:
-            answer = ask(user_message)
-        else:
-            answer = "Hi! I'm AskVES. Ask me anything about VESIT campus!"
+@router.post("/whatsapp")
+async def whatsapp_webhook(request: Request):
+    """Twilio WhatsApp webhook — receives a message and replies via TwiML."""
+    try:
+        form_data = await request.form()
+        user_message = (form_data.get("Body") or "").strip()
+        answer = ask(user_message) if user_message else "Hi! I'm AskVES. Ask me anything about VESIT campus!"
 
         if TWILIO_AVAILABLE:
             resp = MessagingResponse()
             resp.message(answer)
-            handler.send_response(200)
-            handler.send_header('Content-Type', 'text/xml')
-            handler.end_headers()
-            handler.wfile.write(str(resp).encode('utf-8'))
+            return Response(content=str(resp), media_type="text/xml")
         else:
-            # Fallback plain text if twilio not installed
-            handler.send_response(200)
-            handler.send_header('Content-Type', 'application/json')
-            handler.end_headers()
-            handler.wfile.write(json.dumps({'answer': answer}).encode())
-
+            return {"answer": answer}
     except Exception as e:
         logger.error(f"WhatsApp Webhook Error: {e}")
-        handler.send_response(500)
-        handler.end_headers()
+        return Response(status_code=500)
