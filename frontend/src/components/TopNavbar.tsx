@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { signOut } from '../lib/supabase'
+import { signOut, SUPABASE_CONFIGURED } from '../lib/supabase'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
@@ -20,6 +20,8 @@ export function TopNavbar() {
   const [user, setUser] = useState<{ name?: string; email?: string; picture?: string } | null>(null)
 
   useEffect(() => {
+    if (!supabase || !SUPABASE_CONFIGURED) return  // no Supabase — skip
+
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
         const u = data.session.user

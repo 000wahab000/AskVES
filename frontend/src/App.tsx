@@ -19,14 +19,16 @@ import { LandingPage } from './pages/LandingPage'
 
 
 import { useState, useEffect } from 'react'
-import { supabase } from './lib/supabase'
+import { supabase, SUPABASE_CONFIGURED } from './lib/supabase'
 
 function RequireAuth({ children } : { children: ReactNode}){
   const location = useLocation()
-  const [checking, setChecking] = useState(true)
-  const [authed, setAuthed] = useState(false)
+  const [checking, setChecking] = useState(SUPABASE_CONFIGURED)  // only check if Supabase is set up
+  const [authed, setAuthed]     = useState(!SUPABASE_CONFIGURED) // if no Supabase, pass through
 
   useEffect(() => {
+    if (!supabase) return  // no Supabase configured — already authed=true above
+
     supabase.auth.getSession().then(({ data }) => {
       setAuthed(!!data.session)
       setChecking(false)
